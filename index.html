@@ -668,7 +668,7 @@
   const TTS = {
     speak(text, rate = 0.3, pitch = 1) {
       return new Promise(resolve => {
-        const padded = text.length <= 2 ? text + '，，' + text : text;
+        const padded = text.length <= 2 ? text + '，，' : text;
         const utter = new SpeechSynthesisUtterance(padded);
         utter.lang = 'zh-TW';
         utter.rate = rate;
@@ -766,7 +766,7 @@
       el.classList.remove('bounce');
       void el.offsetWidth;
       el.classList.add('bounce');
-      await TTS.speakTwice(this.current, APP.data.settings.speechRate);
+      await TTS.speak(this.current, APP.data.settings.speechRate);
     },
 
     answer(known) {
@@ -950,7 +950,7 @@
       btn.classList.add('bounce');
       setTimeout(() => btn.classList.remove('bounce'), 400);
       const [, char] = this.currentWord;
-      await TTS.speakTwice(char, APP.data.settings.speechRate);
+      await TTS.speak(char, APP.data.settings.speechRate);
     },
 
     renderOptions() {
