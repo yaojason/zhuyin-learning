@@ -666,9 +666,9 @@
 
   // === TTS (Web Speech API) ===
   const TTS = {
-    speak(text, rate = 0.35, pitch = 1) {
+    speak(text, rate = 0.3, pitch = 1) {
       return new Promise(resolve => {
-        const padded = text.length <= 2 ? text + '。' : text;
+        const padded = text.length <= 2 ? text + '，，' + text : text;
         const utter = new SpeechSynthesisUtterance(padded);
         utter.lang = 'zh-TW';
         utter.rate = rate;
@@ -680,9 +680,9 @@
       });
     },
 
-    async speakTwice(text, rate = 0.35) {
+    async speakTwice(text, rate = 0.3) {
       await this.speak(text, rate);
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1200));
       await this.speak(text, rate);
     },
   };
@@ -1054,7 +1054,7 @@
           const type = ALL_ZY_CHARS.includes(symbol) ? 'zy' : (TONE_CHARS.includes(symbol) ? 'tone' : 'punct');
           this.cells.push({ symbol, type });
           this.renderGrid();
-          TTS.speak(symbol, 0.35);
+          TTS.speak(symbol, 0.3);
         });
       });
       document.getElementById('zkSpace').addEventListener('click', () => {
