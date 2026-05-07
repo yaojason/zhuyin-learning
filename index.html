@@ -1080,9 +1080,12 @@
         this.renderGrid();
       });
 
-      // Voice mic
-      const micBtn = document.getElementById('diaryMicBtn');
-      micBtn.addEventListener('click', () => this.toggleRecording());
+      // Voice mic - use event delegation to handle display:none timing
+      document.addEventListener('click', (e) => {
+        if (e.target.id === 'diaryMicBtn' || e.target.closest('#diaryMicBtn')) {
+          this.toggleRecording();
+        }
+      });
 
       // Drawing canvas (for illustrations)
       const canvas = document.getElementById('diaryCanvas');
