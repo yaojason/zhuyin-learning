@@ -234,6 +234,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="注音小天地">
   <meta name="theme-color" content="#FFF9F0">
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@latest/dist/index.js"></script>
 </head>
 <body>
   <div class="app-container">
@@ -423,104 +424,81 @@
     ['ㄈㄢ','飯',3], ['ㄘㄞ','菜',3], ['ㄍㄨㄛ','果',2], ['ㄋㄞ','奶',2],
   ];
 
-  // === CHAR TO ZHUYIN DICTIONARY ===
-  const CHAR_ZHUYIN = {
-    '我':'ㄨㄛˇ','你':'ㄋㄧˇ','他':'ㄊㄚ','她':'ㄊㄚ','們':'ㄇㄣˊ','的':'ㄉㄜ˙','了':'ㄌㄜ˙','是':'ㄕˋ','不':'ㄅㄨˊ',
-    '在':'ㄗㄞˋ','有':'ㄧㄡˇ','這':'ㄓㄜˋ','那':'ㄋㄚˋ','和':'ㄏㄜˊ','也':'ㄧㄝˇ','都':'ㄉㄡ','很':'ㄏㄣˇ',
-    '到':'ㄉㄠˋ','去':'ㄑㄩˋ','來':'ㄌㄞˊ','會':'ㄏㄨㄟˋ','可':'ㄎㄜˇ','以':'ㄧˇ','要':'ㄧㄠˋ','就':'ㄐㄧㄡˋ',
-    '一':'ㄧ','二':'ㄦˋ','三':'ㄙㄢ','四':'ㄙˋ','五':'ㄨˇ','六':'ㄌㄧㄡˋ','七':'ㄑㄧ','八':'ㄅㄚ','九':'ㄐㄧㄡˇ','十':'ㄕˊ',
-    '爸':'ㄅㄚˋ','媽':'ㄇㄚ','哥':'ㄍㄜ','姐':'ㄐㄧㄝˇ','弟':'ㄉㄧˋ','妹':'ㄇㄟˋ','爺':'ㄧㄝˊ','奶':'ㄋㄞˇ',
-    '狗':'ㄍㄡˇ','貓':'ㄇㄠ','鳥':'ㄋㄧㄠˇ','魚':'ㄩˊ','兔':'ㄊㄨˋ','馬':'ㄇㄚˇ','牛':'ㄋㄧㄡˊ','羊':'ㄧㄤˊ','雞':'ㄐㄧ','鴨':'ㄧㄚ',
-    '天':'ㄊㄧㄢ','地':'ㄉㄧˋ','日':'ㄖˋ','月':'ㄩㄝˋ','星':'ㄒㄧㄥ','雲':'ㄩㄣˊ','雨':'ㄩˇ','風':'ㄈㄥ','雪':'ㄒㄩㄝˇ',
-    '山':'ㄕㄢ','水':'ㄕㄨㄟˇ','花':'ㄏㄨㄚ','草':'ㄘㄠˇ','樹':'ㄕㄨˋ','石':'ㄕˊ','海':'ㄏㄞˇ','河':'ㄏㄜˊ',
-    '大':'ㄉㄚˋ','小':'ㄒㄧㄠˇ','多':'ㄉㄨㄛ','少':'ㄕㄠˇ','長':'ㄔㄤˊ','短':'ㄉㄨㄢˇ','高':'ㄍㄠ','低':'ㄉㄧ',
-    '好':'ㄏㄠˇ','壞':'ㄏㄨㄞˋ','新':'ㄒㄧㄣ','舊':'ㄐㄧㄡˋ','快':'ㄎㄨㄞˋ','慢':'ㄇㄢˋ','冷':'ㄌㄥˇ','熱':'ㄖㄜˋ',
-    '紅':'ㄏㄨㄥˊ','藍':'ㄌㄢˊ','綠':'ㄌㄩˋ','黃':'ㄏㄨㄤˊ','白':'ㄅㄞˊ','黑':'ㄏㄟ','粉':'ㄈㄣˇ',
-    '吃':'ㄔ','喝':'ㄏㄜ','看':'ㄎㄢˋ','聽':'ㄊㄧㄥ','說':'ㄕㄨㄛ','讀':'ㄉㄨˊ','寫':'ㄒㄧㄝˇ','畫':'ㄏㄨㄚˋ',
-    '玩':'ㄨㄢˊ','跑':'ㄆㄠˇ','跳':'ㄊㄧㄠˋ','走':'ㄗㄡˇ','坐':'ㄗㄨㄛˋ','站':'ㄓㄢˋ','睡':'ㄕㄨㄟˋ','起':'ㄑㄧˇ',
-    '哭':'ㄎㄨ','笑':'ㄒㄧㄠˋ','唱':'ㄔㄤˋ','跳':'ㄊㄧㄠˋ','飛':'ㄈㄟ','游':'ㄧㄡˊ','開':'ㄎㄞ','關':'ㄍㄨㄢ',
-    '愛':'ㄞˋ','想':'ㄒㄧㄤˇ','知':'ㄓ','道':'ㄉㄠˋ','給':'ㄍㄟˇ','做':'ㄗㄨㄛˋ','用':'ㄩㄥˋ','把':'ㄅㄚˇ',
-    '人':'ㄖㄣˊ','家':'ㄐㄧㄚ','學':'ㄒㄩㄝˊ','校':'ㄒㄧㄠˋ','老':'ㄌㄠˇ','師':'ㄕ','同':'ㄊㄨㄥˊ',
-    '書':'ㄕㄨ','包':'ㄅㄠ','車':'ㄔㄜ','門':'ㄇㄣˊ','窗':'ㄔㄨㄤ','桌':'ㄓㄨㄛ','椅':'ㄧˇ','床':'ㄔㄨㄤˊ',
-    '飯':'ㄈㄢˋ','菜':'ㄘㄞˋ','果':'ㄍㄨㄛˇ','糖':'ㄊㄤˊ','蛋':'ㄉㄢˋ','肉':'ㄖㄡˋ','麵':'ㄇㄧㄢˋ','米':'ㄇㄧˇ',
-    '手':'ㄕㄡˇ','腳':'ㄐㄧㄠˇ','頭':'ㄊㄡˊ','眼':'ㄧㄢˇ','耳':'ㄦˇ','口':'ㄎㄡˇ','鼻':'ㄅㄧˊ','牙':'ㄧㄚˊ',
-    '衣':'ㄧ','褲':'ㄎㄨˋ','鞋':'ㄒㄧㄝˊ','帽':'ㄇㄠˋ','襪':'ㄨㄚˋ',
-    '早':'ㄗㄠˇ','午':'ㄨˇ','晚':'ㄨㄢˇ','上':'ㄕㄤˋ','下':'ㄒㄧㄚˋ','中':'ㄓㄨㄥ','前':'ㄑㄧㄢˊ','後':'ㄏㄡˋ',
-    '今':'ㄐㄧㄣ','明':'ㄇㄧㄥˊ','昨':'ㄗㄨㄛˊ',
-    '裡':'ㄌㄧˇ','外':'ㄨㄞˋ','左':'ㄗㄨㄛˇ','右':'ㄧㄡˋ',
-    '讓':'ㄖㄤˋ','被':'ㄅㄟˋ','還':'ㄏㄞˊ','再':'ㄗㄞˋ','最':'ㄗㄨㄟˋ','比':'ㄅㄧˇ',
-    '什':'ㄕㄜˊ','麼':'ㄇㄜ˙','怎':'ㄗㄣˇ','樣':'ㄧㄤˋ','誰':'ㄕㄟˊ','哪':'ㄋㄚˇ','嗎':'ㄇㄚ˙','呢':'ㄋㄜ˙',
-    '但':'ㄉㄢˋ','因':'ㄧㄣ','為':'ㄨㄟˋ','所':'ㄙㄨㄛˇ','如':'ㄖㄨˊ',
-    '開':'ㄎㄞ','心':'ㄒㄧㄣ','生':'ㄕㄥ','氣':'ㄑㄧˋ','難':'ㄋㄢˊ','過':'ㄍㄨㄛˋ','怕':'ㄆㄚˋ','高':'ㄍㄠ','興':'ㄒㄧㄥˋ',
-    '朋':'ㄆㄥˊ','友':'ㄧㄡˇ','公':'ㄍㄨㄥ','園':'ㄩㄢˊ','東':'ㄉㄨㄥ','西':'ㄒㄧ','事':'ㄕˋ','情':'ㄑㄧㄥˊ',
-    '然':'ㄖㄢˊ','跟':'ㄍㄣ','把':'ㄅㄚˇ','從':'ㄘㄨㄥˊ','沒':'ㄇㄟˊ','對':'ㄉㄨㄟˋ','錯':'ㄘㄨㄛˋ',
-    '吧':'ㄅㄚ˙','喔':'ㄛ','啊':'ㄚ','哦':'ㄛˊ','嗯':'ㄣˊ','耶':'ㄧㄝ',
-    '蘋':'ㄆㄧㄥˊ','香':'ㄒㄧㄤ','蕉':'ㄐㄧㄠ','西':'ㄒㄧ','瓜':'ㄍㄨㄚ','葡':'ㄆㄨˊ','萄':'ㄊㄠˊ',
-    '電':'ㄉㄧㄢˋ','視':'ㄕˋ','腦':'ㄋㄠˇ','話':'ㄏㄨㄚˋ',
-    '球':'ㄑㄧㄡˊ','積':'ㄐㄧ','木':'ㄇㄨˋ','紙':'ㄓˇ','筆':'ㄅㄧˇ',
-    '爬':'ㄆㄚˊ','游':'ㄧㄡˊ','泳':'ㄩㄥˇ','騎':'ㄑㄧˊ',
-    '太':'ㄊㄞˋ','陽':'ㄧㄤˊ','亮':'ㄌㄧㄤˋ',
-    '咖':'ㄎㄚ','喱':'ㄌㄧˊ','哩':'ㄌㄧˇ','雞':'ㄐㄧ','排':'ㄆㄞˊ','牛':'ㄋㄧㄡˊ','豬':'ㄓㄨ',
-    '湯':'ㄊㄤ','餅':'ㄅㄧㄥˇ','麵':'ㄇㄧㄢˋ','粥':'ㄓㄡ','豆':'ㄉㄡˋ','腐':'ㄈㄨˇ',
-    '漂':'ㄆㄧㄠˋ','真':'ㄓㄣ','著':'ㄓㄜ˙','得':'ㄉㄜˊ','能':'ㄋㄥˊ','夠':'ㄍㄡˋ',
-    '已':'ㄧˇ','經':'ㄐㄧㄥ','非':'ㄈㄟ','常':'ㄔㄤˊ','特':'ㄊㄜˋ','別':'ㄅㄧㄝˊ',
-    '每':'ㄇㄟˇ','次':'ㄘˋ','些':'ㄒㄧㄝ','只':'ㄓˇ','又':'ㄧㄡˋ','才':'ㄘㄞˊ',
-    '等':'ㄉㄥˇ','先':'ㄒㄧㄢ','後':'ㄏㄡˋ','完':'ㄨㄢˊ','成':'ㄔㄥˊ',
-    '妳':'ㄋㄧˇ','它':'ㄊㄚ','自':'ㄗˋ','己':'ㄐㄧˇ',
-    '喜':'ㄒㄧˇ','歡':'ㄏㄨㄢ','謝':'ㄒㄧㄝˋ','請':'ㄑㄧㄥˇ','抱':'ㄅㄠˋ','歉':'ㄑㄧㄢˋ',
-    '幫':'ㄅㄤ','忙':'ㄇㄤˊ','問':'ㄨㄣˋ','答':'ㄉㄚˊ','教':'ㄐㄧㄠ','找':'ㄓㄠˇ',
-    '回':'ㄏㄨㄟˊ','進':'ㄐㄧㄣˋ','出':'ㄔㄨ','送':'ㄙㄨㄥˋ','拿':'ㄋㄚˊ','放':'ㄈㄤˋ',
-    '穿':'ㄔㄨㄢ','洗':'ㄒㄧˇ','刷':'ㄕㄨㄚ','切':'ㄑㄧㄝ','倒':'ㄉㄠˋ',
-    '呀':'ㄧㄚ˙','唷':'ㄧㄡ','哇':'ㄨㄚ','欸':'ㄟ','哈':'ㄏㄚ',
-    '乖':'ㄍㄨㄞ','棒':'ㄅㄤˋ','累':'ㄌㄟˋ','餓':'ㄜˋ','飽':'ㄅㄠˇ','渴':'ㄎㄜˇ',
-    '甜':'ㄊㄧㄢˊ','鹹':'ㄒㄧㄢˊ','辣':'ㄌㄚˋ','酸':'ㄙㄨㄢ','苦':'ㄎㄨˇ',
-    '漂':'ㄆㄧㄠˋ','美':'ㄇㄟˇ','醜':'ㄔㄡˇ','胖':'ㄆㄤˋ','瘦':'ㄕㄡˋ',
-    '哭':'ㄎㄨ','鬧':'ㄋㄠˋ','安':'ㄢ','靜':'ㄐㄧㄥˋ','乾':'ㄍㄢ','淨':'ㄐㄧㄥˋ',
+  // === PINYIN TO ZHUYIN CONVERTER (uses pinyin-pro library) ===
+  const P2Z_INITIALS = {b:'ㄅ',p:'ㄆ',m:'ㄇ',f:'ㄈ',d:'ㄉ',t:'ㄊ',n:'ㄋ',l:'ㄌ',g:'ㄍ',k:'ㄎ',h:'ㄏ',j:'ㄐ',q:'ㄑ',x:'ㄒ',zh:'ㄓ',ch:'ㄔ',sh:'ㄕ',r:'ㄖ',z:'ㄗ',c:'ㄘ',s:'ㄙ'};
+  const P2Z_FINALS = {
+    a:'ㄚ',o:'ㄛ',e:'ㄜ',ai:'ㄞ',ei:'ㄟ',ao:'ㄠ',ou:'ㄡ',an:'ㄢ',en:'ㄣ',ang:'ㄤ',eng:'ㄥ',er:'ㄦ',
+    i:'ㄧ',u:'ㄨ',v:'ㄩ',
+    ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',
+    ua:'ㄨㄚ',uo:'ㄨㄛ',uai:'ㄨㄞ',ui:'ㄨㄟ',uan:'ㄨㄢ',un:'ㄨㄣ',uang:'ㄨㄤ',ong:'ㄨㄥ',
+    ve:'ㄩㄝ',van:'ㄩㄢ',vn:'ㄩㄣ',vang:'ㄩㄤ',
+    ue:'ㄩㄝ',
   };
+  const P2Z_TONES = {'1':'','2':'ˊ','3':'ˇ','4':'ˋ','0':'˙','5':''};
+  const TONE_MARKS = {'ā':['a','1'],'á':['a','2'],'ǎ':['a','3'],'à':['a','4'],
+    'ē':['e','1'],'é':['e','2'],'ě':['e','3'],'è':['e','4'],
+    'ī':['i','1'],'í':['i','2'],'ǐ':['i','3'],'ì':['i','4'],
+    'ō':['o','1'],'ó':['o','2'],'ǒ':['o','3'],'ò':['o','4'],
+    'ū':['u','1'],'ú':['u','2'],'ǔ':['u','3'],'ù':['u','4'],
+    'ǖ':['v','1'],'ǘ':['v','2'],'ǚ':['v','3'],'ǜ':['v','4'],'ü':'v'};
+
+  function pinyinToZhuyin(py) {
+    let tone = '5';
+    let plain = '';
+    for (const ch of py) {
+      if (TONE_MARKS[ch]) {
+        const [rep, t] = Array.isArray(TONE_MARKS[ch]) ? TONE_MARKS[ch] : [TONE_MARKS[ch], '5'];
+        plain += rep;
+        tone = t;
+      } else {
+        plain += ch;
+      }
+    }
+    plain = plain.replace(/ü/g, 'v');
+    let initial = '';
+    for (const k of ['zh','ch','sh','b','p','m','f','d','t','n','l','g','k','h','j','q','x','r','z','c','s']) {
+      if (plain.startsWith(k)) { initial = k; plain = plain.slice(k.length); break; }
+    }
+    if (initial === '' && (plain.startsWith('y') || plain.startsWith('w'))) {
+      if (plain.startsWith('yu')) { plain = 'v' + plain.slice(2); }
+      else if (plain.startsWith('y')) { plain = 'i' + plain.slice(1); }
+      else if (plain.startsWith('wu')) { plain = 'u' + plain.slice(2); }
+      else if (plain.startsWith('w')) { plain = 'u' + plain.slice(1); }
+    }
+    if (['j','q','x'].includes(initial) && plain.startsWith('u')) { plain = 'v' + plain.slice(1); }
+    let finalZy = '';
+    const tryKeys = Object.keys(P2Z_FINALS).sort((a,b) => b.length - a.length);
+    for (const k of tryKeys) {
+      if (plain === k) { finalZy = P2Z_FINALS[k]; break; }
+    }
+    if (!finalZy && plain) finalZy = plain;
+    const initZy = initial ? (P2Z_INITIALS[initial] || '') : '';
+    const toneZy = P2Z_TONES[tone] || '';
+    return initZy + finalZy + toneZy;
+  }
 
   function charToZhuyinBlocks(text) {
     const blocks = [];
-    for (const ch of text) {
-      if (CHAR_ZHUYIN[ch]) {
-        blocks.push({ zhuyin: CHAR_ZHUYIN[ch], char: ch });
-      } else if (/[一-鿿]/.test(ch)) {
-        blocks.push({ zhuyin: ch, char: ch, unknown: true });
-      } else if (ch === '，' || ch === '。' || ch === '！' || ch === '？') {
+    if (typeof pinyinPro === 'undefined') {
+      for (const ch of text) {
+        if (/[一-鿿]/.test(ch)) blocks.push({ zhuyin: ch, char: ch, unknown: true });
+        else if (/[，。！？、]/.test(ch)) blocks.push({ zhuyin: ch, char: ch, punct: true });
+      }
+      return blocks;
+    }
+    const chars = [...text];
+    const pinyins = pinyinPro.pinyin(text, { toneType: 'symbol', type: 'array' });
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      if (/[，。！？、；：]/.test(ch)) {
         blocks.push({ zhuyin: ch, char: ch, punct: true });
+      } else if (/[一-鿿]/.test(ch)) {
+        const py = pinyins[i] || ch;
+        const zy = pinyinToZhuyin(py);
+        blocks.push({ zhuyin: zy || ch, char: ch });
       }
     }
     return blocks;
-  }
-
-  function renderZhuyinBlocks(container, blocks) {
-    container.innerHTML = '';
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.gap = '6px';
-    container.style.justifyContent = 'center';
-    blocks.forEach(b => {
-      const div = document.createElement('div');
-      if (b.punct) {
-        div.style.cssText = 'font-size:24px;display:flex;align-items:flex-end;';
-        div.textContent = b.char;
-      } else {
-        div.style.cssText = `
-          display:flex;flex-direction:column;align-items:center;
-          border:2px solid var(--secondary);border-radius:12px;
-          padding:8px 6px;min-width:50px;background:white;
-          box-shadow:0 2px 6px rgba(0,0,0,0.08);
-        `;
-        const zy = document.createElement('div');
-        zy.style.cssText = 'font-size:20px;font-weight:bold;color:var(--text);line-height:1.3;';
-        zy.textContent = b.zhuyin;
-        const ch = document.createElement('div');
-        ch.style.cssText = 'font-size:12px;color:#aaa;margin-top:4px;';
-        ch.textContent = b.unknown ? '？' : b.char;
-        div.appendChild(zy);
-        div.appendChild(ch);
-      }
-      container.appendChild(div);
-    });
   }
 
   // Diary prompts
