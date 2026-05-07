@@ -291,7 +291,7 @@
         <!-- 語音輸入 -->
         <div style="display:flex;align-items:center;gap:12px;margin:12px 0;">
           <button class="btn-big btn-primary" id="diaryMicBtn" style="font-size:28px;width:60px;height:60px;border-radius:50%;padding:0;">🎤</button>
-          <div id="diaryMicStatus" style="font-size:14px;color:#888;">按住說話，會轉成注音</div>
+          <div id="diaryMicStatus" style="font-size:14px;color:#888;">點一下開始說話</div>
         </div>
 
         <!-- 原文（小字） -->
@@ -934,7 +934,7 @@
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         this.recognition = new SR();
         this.recognition.lang = 'zh-TW';
-        this.recognition.continuous = false;
+        this.recognition.continuous = true;
         this.recognition.interimResults = true;
         this.recognition.onresult = (e) => {
           const text = Array.from(e.results).map(r => r[0].transcript).join('');
@@ -943,21 +943,21 @@
           this.cells = charToZhuyinCells(text);
           this.renderGrid();
         };
-        this.recognition.onerror = () => {
-          document.getElementById('diaryMicStatus').textContent = '再說一次試試看 🎤';
+        this.recognition.onerror = (e) => {
+          if (e.error !== 'aborted') {
+            document.getElementById('diaryMicStatus').textContent = '再說一次試試看 🎤';
+          }
         };
         this.recognition.onend = () => {
           this.isRecording = false;
           document.getElementById('diaryMicBtn').style.background = '';
-          document.getElementById('diaryMicStatus').textContent = '按住說話，會轉成注音';
+          document.getElementById('diaryMicBtn').textContent = '🎤';
+          document.getElementById('diaryMicStatus').textContent = '點一下開始說話';
         };
       }
 
       const micBtn = document.getElementById('diaryMicBtn');
-      micBtn.addEventListener('mousedown', () => this.startRecording());
-      micBtn.addEventListener('mouseup', () => this.stopRecording());
-      micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); this.startRecording(); });
-      micBtn.addEventListener('touchend', () => this.stopRecording());
+      micBtn.addEventListener('click', () => this.toggleRecording());
 
       const canvas = document.getElementById('diaryCanvas');
       this.ctx = canvas.getContext('2d');
@@ -999,17 +999,21 @@
       });
     },
 
-    startRecording() {
+    toggleRecording() {
       if (!this.recognition) return;
-      this.isRecording = true;
-      document.getElementById('diaryMicBtn').style.background = 'var(--primary)';
-      document.getElementById('diaryMicStatus').textContent = '正在聽...';
-      this.recognition.start();
-    },
-
-    stopRecording() {
-      if (!this.recognition || !this.isRecording) return;
-      this.recognition.stop();
+      if (this.isRecording) {
+        this.recognition.stop();
+        this.isRecording = false;
+        document.getElementById('diaryMicBtn').style.background = '';
+        document.getElementById('diaryMicBtn').textContent = '🎤';
+        document.getElementById('diaryMicStatus').textContent = '點一下開始說話';
+      } else {
+        this.isRecording = true;
+        document.getElementById('diaryMicBtn').style.background = 'var(--primary)';
+        document.getElementById('diaryMicBtn').textContent = '⏹️';
+        document.getElementById('diaryMicStatus').textContent = '正在聽... 說完點一下停止';
+        this.recognition.start();
+      }
     },
 
     startDraw(e) {
