@@ -260,7 +260,7 @@
         <h3 style="margin-bottom:12px;">設定</h3>
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
           <label>每日目標：<input type="number" id="settingGoal" min="5" max="100" style="width:60px;font-size:16px;padding:4px;"> 題</label>
-          <label>發音速度：<select id="settingRate" style="font-size:16px;padding:4px;"><option value="0.5">慢</option><option value="0.7">正常</option><option value="1">快</option></select></label>
+          <label>發音速度：<select id="settingRate" style="font-size:16px;padding:4px;"><option value="0.7">慢</option><option value="1" selected>正常</option><option value="1.2">快</option></select></label>
           <button class="btn-big btn-danger" id="settingReset" style="font-size:16px;padding:10px;">重置所有進度</button>
         </div>
       </div>
@@ -366,7 +366,7 @@
         lastActive: null,
         settings: {
           dailyGoal: 20,
-          speechRate: 0.6,
+          speechRate: 1,
           voice: 'zh-TW-YunJheNeural',
         },
         todayStats: { date: null, questions: 0, correct: 0, minutes: 0 },
@@ -431,18 +431,19 @@
 
   // === TTS (Web Speech API) ===
   const TTS = {
-    speak(text, rate = 0.6) {
+    speak(text, rate = 1) {
       return new Promise(resolve => {
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'zh-TW';
         utter.rate = rate;
+        utter.volume = 1.0;
         utter.onend = resolve;
         utter.onerror = resolve;
         speechSynthesis.speak(utter);
       });
     },
 
-    async speakTwice(text, rate = 0.6) {
+    async speakTwice(text, rate = 1) {
       await this.speak(text, rate);
       await new Promise(r => setTimeout(r, 500));
       await this.speak(text, rate);
@@ -956,7 +957,7 @@
       }
 
       document.getElementById('settingGoal').value = APP.data.settings.dailyGoal;
-      document.getElementById('settingRate').value = APP.data.settings.speechRate >= 0.9 ? '1' : APP.data.settings.speechRate >= 0.6 ? '0.7' : '0.5';
+      document.getElementById('settingRate').value = APP.data.settings.speechRate >= 1.1 ? '1.2' : APP.data.settings.speechRate >= 0.9 ? '1' : '0.7';
     },
   };
 
