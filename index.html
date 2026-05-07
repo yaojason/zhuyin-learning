@@ -162,71 +162,36 @@
     }
     .diary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, 52px);
-      gap: 4px;
+      grid-template-columns: repeat(10, 36px);
+      gap: 0px;
       justify-content: center;
-      min-height: 60px;
-      padding: 8px;
+      min-height: 40px;
+      padding: 4px;
       background: #fefcf7;
       border: 1px solid #e8e0d0;
-      border-radius: 8px;
+      border-radius: 4px;
     }
     .diary-cell {
-      width: 56px;
-      height: 72px;
-      border: 1.5px solid #ccc;
-      border-radius: 4px;
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
-      background: white;
-      position: relative;
-      overflow: hidden;
-    }
-    .diary-cell .ch {
-      flex: 1;
+      width: 36px;
+      height: 36px;
+      border: 1px solid #ccc;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
+      background: white;
+      font-size: 20px;
       font-weight: bold;
       color: var(--text);
     }
-    .diary-cell .zy-col {
-      width: 18px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0px;
-      padding: 2px 1px;
-      border-left: 1px solid #eee;
-      background: #fafaf5;
-    }
-    .diary-cell .zy-col span {
-      font-size: 11px;
-      line-height: 1.1;
-      color: #e74c3c;
-      font-weight: bold;
-    }
-    .diary-cell .tone-mark {
-      position: absolute;
-      top: 2px;
-      right: 1px;
-      font-size: 10px;
-      color: #3498db;
-      font-weight: bold;
-    }
     .diary-cell.weak {
       border-color: var(--primary);
-      border-style: dashed;
       background: #fff5f5;
     }
     .diary-cell.punct {
-      border: none;
-      background: none;
-      font-size: 20px;
-      width: 24px;
+      color: #e74c3c;
+    }
+    .diary-cell.space {
+      background: #f8f8f8;
     }
     /* Animations */
     @keyframes bounce {
@@ -500,28 +465,29 @@
     return initZy + finalZy + toneZy;
   }
 
-  function charToZhuyinBlocks(text) {
-    const blocks = [];
-    if (typeof pinyinPro === 'undefined') {
-      for (const ch of text) {
-        if (/[一-鿿]/.test(ch)) blocks.push({ zhuyin: ch, char: ch, unknown: true });
-        else if (/[，。！？、]/.test(ch)) blocks.push({ zhuyin: ch, char: ch, punct: true });
-      }
-      return blocks;
-    }
+  const ALL_ZY_CHARS = ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ','ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ㄧ','ㄨ','ㄩ'];
+  const TONE_CHARS = ['ˉ','ˊ','ˇ','ˋ','˙'];
+
+  function charToZhuyinCells(text) {
+    const cells = [];
+    if (typeof pinyinPro === 'undefined') return cells;
     const chars = [...text];
     const pinyins = pinyinPro.pinyin(text, { toneType: 'symbol', type: 'array' });
     for (let i = 0; i < chars.length; i++) {
       const ch = chars[i];
       if (/[，。！？、；：]/.test(ch)) {
-        blocks.push({ zhuyin: ch, char: ch, punct: true });
+        cells.push({ symbol: ch, type: 'punct' });
       } else if (/[一-鿿]/.test(ch)) {
         const py = pinyins[i] || ch;
         const zy = pinyinToZhuyin(py);
-        blocks.push({ zhuyin: zy || ch, char: ch });
+        for (const s of zy) {
+          if (ALL_ZY_CHARS.includes(s)) cells.push({ symbol: s, type: 'zy', char: ch });
+          else if (TONE_CHARS.includes(s)) cells.push({ symbol: s, type: 'tone', char: ch });
+        }
+        cells.push({ symbol: '', type: 'space' });
       }
     }
-    return blocks;
+    return cells;
   }
 
   // Diary prompts
@@ -954,7 +920,7 @@
     currentStroke: [],
     ctx: null,
     originalText: '',
-    blocks: [],
+    cells: [],
 
     init() {
       const prompt = DIARY_PROMPTS[Math.floor(Math.random() * DIARY_PROMPTS.length)];
@@ -972,7 +938,7 @@
           const text = Array.from(e.results).map(r => r[0].transcript).join('');
           this.originalText = text;
           document.getElementById('diaryOriginal').textContent = '原文：' + text;
-          this.blocks = charToZhuyinBlocks(text);
+          this.cells = charToZhuyinCells(text);
           this.renderGrid();
         };
         this.recognition.onerror = () => {
@@ -1008,54 +974,24 @@
       document.getElementById('diaryReadBack').addEventListener('click', () => this.readBack());
     },
 
-    splitZhuyin(zy) {
-      const toneChars = ['ˉ','ˊ','ˇ','ˋ','˙'];
-      let tone = '';
-      let body = zy;
-      for (const t of toneChars) {
-        if (zy.endsWith(t)) { tone = t; body = zy.slice(0, -1); break; }
-      }
-      const allZy = ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ','ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ㄧ','ㄨ','ㄩ'];
-      const parts = [];
-      for (const ch of body) {
-        if (allZy.includes(ch)) parts.push(ch);
-      }
-      return { parts, tone };
-    },
-
     renderGrid() {
       const grid = document.getElementById('diaryGrid');
       grid.innerHTML = '';
-      this.blocks.forEach(b => {
+      this.cells.forEach(c => {
         const cell = document.createElement('div');
-        if (b.punct) {
-          cell.className = 'diary-cell punct';
-          cell.textContent = b.char;
+        cell.className = 'diary-cell';
+        if (c.type === 'punct') {
+          cell.classList.add('punct');
+          cell.textContent = c.symbol;
+        } else if (c.type === 'space') {
+          cell.classList.add('space');
+        } else if (c.type === 'tone') {
+          cell.textContent = c.symbol;
+          cell.style.color = '#3498db';
         } else {
-          const isWeak = APP.data.weakItems.some(w => b.zhuyin.includes(w));
-          cell.className = 'diary-cell' + (isWeak ? ' weak' : '') + (b.unknown ? ' weak' : '');
-
-          const ch = document.createElement('div');
-          ch.className = 'ch';
-          ch.textContent = b.unknown ? '？' : b.char;
-          cell.appendChild(ch);
-
-          const { parts, tone } = this.splitZhuyin(b.zhuyin);
-          const zyCol = document.createElement('div');
-          zyCol.className = 'zy-col';
-          parts.forEach(p => {
-            const s = document.createElement('span');
-            s.textContent = p;
-            zyCol.appendChild(s);
-          });
-          cell.appendChild(zyCol);
-
-          if (tone) {
-            const tm = document.createElement('div');
-            tm.className = 'tone-mark';
-            tm.textContent = tone;
-            cell.appendChild(tm);
-          }
+          cell.textContent = c.symbol;
+          const isWeak = APP.data.weakItems.includes(c.symbol);
+          if (isWeak) cell.classList.add('weak');
         }
         grid.appendChild(cell);
       });
@@ -1107,7 +1043,7 @@
 
     clearAll() {
       this.strokes = [];
-      this.blocks = [];
+      this.cells = [];
       this.originalText = '';
       this.ctx.clearRect(0, 0, 350, 180);
       document.getElementById('diaryGrid').innerHTML = '';
@@ -1129,7 +1065,7 @@
       const canvas = document.getElementById('diaryCanvas');
       const drawing = canvas.toDataURL('image/png');
       const today = new Date().toISOString().slice(0, 10);
-      const zhuyinText = this.blocks.map(b => b.zhuyin).join(' ');
+      const zhuyinText = this.cells.filter(c => c.type !== 'space').map(c => c.symbol).join('');
 
       const entry = { date: today, text: this.originalText, zhuyin: zhuyinText, drawing };
 
