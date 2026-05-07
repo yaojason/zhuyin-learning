@@ -193,6 +193,40 @@
     .diary-cell.space {
       background: #f8f8f8;
     }
+    /* Diary input mode buttons */
+    .diary-input-btn {
+      padding: 6px 14px;
+      border-radius: 16px;
+      border: 2px solid #ddd;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .diary-input-btn.active {
+      background: var(--secondary);
+      color: white;
+      border-color: var(--secondary);
+    }
+    .diary-input-area { margin-top: 4px; }
+    /* Zhuyin keyboard */
+    .zhuyin-kb { display:flex; flex-direction:column; gap:4px; }
+    .zhuyin-kb-row { display:flex; gap:3px; justify-content:center; }
+    .zk {
+      width: 32px; height: 36px;
+      border: 1.5px solid #ccc;
+      border-radius: 6px;
+      background: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+    }
+    .zk:active { background: var(--accent); }
+    .zk-wide { width: 64px; font-size: 13px; }
+    .zk-del { width: 48px; background: #fee; color: var(--primary); }
     /* Animations */
     @keyframes bounce {
       0%, 100% { transform: scale(1); }
@@ -276,7 +310,6 @@
 
     <!-- Tab: Diary -->
     <div class="tab-content" id="tab-diary">
-      <!-- 日記本風格 -->
       <div class="diary-notebook">
         <!-- 標題列 -->
         <div class="diary-header">
@@ -284,25 +317,72 @@
           <span id="diaryPrompt" style="font-size:16px;"></span>
         </div>
 
-        <!-- 上半：畫圖區 -->
+        <!-- 畫圖區 -->
         <div class="diary-draw-label">✏️ 畫一畫</div>
-        <canvas id="diaryCanvas" width="350" height="180" style="border:1px solid #ccc;background:white;touch-action:none;width:100%;"></canvas>
+        <canvas id="diaryCanvas" width="350" height="140" style="border:1px solid #ccc;background:white;touch-action:none;width:100%;"></canvas>
 
-        <!-- 語音輸入 -->
-        <div style="display:flex;align-items:center;gap:12px;margin:12px 0;">
-          <button class="btn-big btn-primary" id="diaryMicBtn" style="font-size:28px;width:60px;height:60px;border-radius:50%;padding:0;">🎤</button>
-          <div id="diaryMicStatus" style="font-size:14px;color:#888;">點一下開始說話</div>
-        </div>
-
-        <!-- 原文（小字） -->
-        <div id="diaryOriginal" style="font-size:13px;color:#aaa;min-height:20px;margin-bottom:8px;"></div>
-
-        <!-- 下半：注音方格區 -->
+        <!-- 注音方格區 -->
         <div class="diary-grid-label">📝 注音日記</div>
         <div id="diaryGrid" class="diary-grid"></div>
 
+        <!-- 輸入方式切換 -->
+        <div style="display:flex;gap:6px;margin:10px 0 6px;justify-content:center;">
+          <button class="diary-input-btn active" data-input="keyboard">⌨️ 鍵盤</button>
+          <button class="diary-input-btn" data-input="handwrite">✍️ 手寫</button>
+          <button class="diary-input-btn" data-input="voice">🎤 語音</button>
+        </div>
+
+        <!-- 輸入區：鍵盤 -->
+        <div id="diaryInputKeyboard" class="diary-input-area">
+          <div class="zhuyin-kb">
+            <div class="zhuyin-kb-row">
+              <button class="zk">ㄅ</button><button class="zk">ㄉ</button><button class="zk">ˇ</button><button class="zk">ˋ</button>
+              <button class="zk">ㄓ</button><button class="zk">ˊ</button><button class="zk">˙</button><button class="zk">ㄚ</button>
+              <button class="zk">ㄞ</button><button class="zk">ㄢ</button>
+            </div>
+            <div class="zhuyin-kb-row">
+              <button class="zk">ㄆ</button><button class="zk">ㄊ</button><button class="zk">ㄍ</button><button class="zk">ㄐ</button>
+              <button class="zk">ㄔ</button><button class="zk">ㄗ</button><button class="zk">ㄧ</button><button class="zk">ㄛ</button>
+              <button class="zk">ㄟ</button><button class="zk">ㄣ</button>
+            </div>
+            <div class="zhuyin-kb-row">
+              <button class="zk">ㄇ</button><button class="zk">ㄋ</button><button class="zk">ㄎ</button><button class="zk">ㄑ</button>
+              <button class="zk">ㄕ</button><button class="zk">ㄘ</button><button class="zk">ㄨ</button><button class="zk">ㄜ</button>
+              <button class="zk">ㄠ</button><button class="zk">ㄤ</button>
+            </div>
+            <div class="zhuyin-kb-row">
+              <button class="zk">ㄈ</button><button class="zk">ㄌ</button><button class="zk">ㄏ</button><button class="zk">ㄒ</button>
+              <button class="zk">ㄖ</button><button class="zk">ㄙ</button><button class="zk">ㄩ</button><button class="zk">ㄝ</button>
+              <button class="zk">ㄡ</button><button class="zk">ㄥ</button>
+            </div>
+            <div class="zhuyin-kb-row">
+              <button class="zk" style="font-size:14px;">ㄦ</button>
+              <button class="zk zk-wide" id="zkSpace">空格</button>
+              <button class="zk" style="font-size:14px;">，</button>
+              <button class="zk" style="font-size:14px;">。</button>
+              <button class="zk zk-del" id="zkDelete">⌫</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 輸入區：手寫 -->
+        <div id="diaryInputHandwrite" class="diary-input-area" style="display:none;">
+          <canvas id="diaryWriteCanvas" width="300" height="120" style="border:2px dashed #ccc;border-radius:12px;background:white;touch-action:none;width:100%;"></canvas>
+          <div style="font-size:12px;color:#aaa;margin-top:4px;">在上面寫注音，寫完按「加入」</div>
+          <button class="btn-big btn-primary" id="diaryWriteAdd" style="font-size:14px;padding:8px 16px;margin-top:6px;">加入方格</button>
+        </div>
+
+        <!-- 輸入區：語音 -->
+        <div id="diaryInputVoice" class="diary-input-area" style="display:none;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="btn-big btn-primary" id="diaryMicBtn" style="font-size:28px;width:60px;height:60px;border-radius:50%;padding:0;">🎤</button>
+            <div id="diaryMicStatus" style="font-size:14px;color:#888;">點一下開始說話</div>
+          </div>
+          <div id="diaryOriginal" style="font-size:13px;color:#aaa;min-height:20px;margin-top:8px;"></div>
+        </div>
+
         <!-- 工具列 -->
-        <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
+        <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;">
           <button class="btn-big" id="diaryUndo" style="font-size:16px;padding:8px 14px;background:#eee;">↩️</button>
           <button class="btn-big" id="diaryClear" style="font-size:16px;padding:8px 14px;background:#eee;">🗑️</button>
           <button class="btn-big btn-success" id="diarySave" style="font-size:16px;padding:8px 14px;">💾 存</button>
@@ -956,19 +1036,88 @@
         };
       }
 
+      // Input mode switching
+      document.querySelectorAll('.diary-input-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.diary-input-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelectorAll('.diary-input-area').forEach(a => a.style.display = 'none');
+          document.getElementById('diaryInput' + btn.dataset.input.charAt(0).toUpperCase() + btn.dataset.input.slice(1)).style.display = '';
+        });
+      });
+
+      // Zhuyin keyboard
+      document.querySelectorAll('.zk').forEach(btn => {
+        if (btn.id === 'zkSpace' || btn.id === 'zkDelete') return;
+        btn.addEventListener('click', () => {
+          const symbol = btn.textContent;
+          const type = ALL_ZY_CHARS.includes(symbol) ? 'zy' : (TONE_CHARS.includes(symbol) ? 'tone' : 'punct');
+          this.cells.push({ symbol, type });
+          this.renderGrid();
+          TTS.speak(symbol, 0.35);
+        });
+      });
+      document.getElementById('zkSpace').addEventListener('click', () => {
+        this.cells.push({ symbol: '', type: 'space' });
+        this.renderGrid();
+      });
+      document.getElementById('zkDelete').addEventListener('click', () => {
+        this.cells.pop();
+        this.renderGrid();
+      });
+
+      // Voice mic
       const micBtn = document.getElementById('diaryMicBtn');
       micBtn.addEventListener('click', () => this.toggleRecording());
 
+      // Drawing canvas (for illustrations)
       const canvas = document.getElementById('diaryCanvas');
       this.ctx = canvas.getContext('2d');
       this.ctx.lineWidth = 4;
       this.ctx.lineCap = 'round';
       this.ctx.strokeStyle = '#2D3436';
-
       canvas.addEventListener('pointerdown', (e) => this.startDraw(e));
       canvas.addEventListener('pointermove', (e) => this.draw(e));
       canvas.addEventListener('pointerup', () => this.endDraw());
       canvas.addEventListener('pointerleave', () => this.endDraw());
+
+      // Handwriting canvas (for writing zhuyin)
+      const wCanvas = document.getElementById('diaryWriteCanvas');
+      if (wCanvas) {
+        this.wCtx = wCanvas.getContext('2d');
+        this.wCtx.lineWidth = 5;
+        this.wCtx.lineCap = 'round';
+        this.wCtx.strokeStyle = '#2D3436';
+        this.wStrokes = [];
+        this.wCurrent = [];
+        wCanvas.addEventListener('pointerdown', (e) => {
+          const r = e.target.getBoundingClientRect();
+          this.wCurrent = [{ x: e.clientX - r.left, y: e.clientY - r.top }];
+          this.wCtx.beginPath();
+          this.wCtx.moveTo(this.wCurrent[0].x, this.wCurrent[0].y);
+        });
+        wCanvas.addEventListener('pointermove', (e) => {
+          if (!this.wCurrent.length) return;
+          const r = e.target.getBoundingClientRect();
+          const p = { x: e.clientX - r.left, y: e.clientY - r.top };
+          this.wCurrent.push(p);
+          this.wCtx.lineTo(p.x, p.y);
+          this.wCtx.stroke();
+        });
+        wCanvas.addEventListener('pointerup', () => {
+          if (this.wCurrent.length) this.wStrokes.push([...this.wCurrent]);
+          this.wCurrent = [];
+        });
+        wCanvas.addEventListener('pointerleave', () => { this.wCurrent = []; });
+        document.getElementById('diaryWriteAdd').addEventListener('click', () => {
+          // Save handwriting as image cell and clear
+          const img = wCanvas.toDataURL('image/png');
+          this.cells.push({ symbol: '✍', type: 'zy', handwriting: img });
+          this.renderGrid();
+          this.wCtx.clearRect(0, 0, 300, 120);
+          this.wStrokes = [];
+        });
+      }
 
       document.getElementById('diaryUndo').addEventListener('click', () => this.undo());
       document.getElementById('diaryClear').addEventListener('click', () => this.clearAll());
