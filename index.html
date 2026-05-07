@@ -162,24 +162,24 @@
     }
     .diary-grid {
       display: grid;
-      grid-template-columns: repeat(10, 36px);
+      grid-template-columns: repeat(7, 44px);
       gap: 0px;
       justify-content: center;
-      min-height: 40px;
+      min-height: 48px;
       padding: 4px;
       background: #fefcf7;
       border: 1px solid #e8e0d0;
       border-radius: 4px;
     }
     .diary-cell {
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
       border: 1px solid #ccc;
       display: flex;
       align-items: center;
       justify-content: center;
       background: white;
-      font-size: 20px;
+      font-size: 26px;
       font-weight: bold;
       color: var(--text);
     }
@@ -454,6 +454,8 @@
       else if (plain.startsWith('w')) { plain = 'u' + plain.slice(1); }
     }
     if (['j','q','x'].includes(initial) && plain.startsWith('u')) { plain = 'v' + plain.slice(1); }
+    // zh/ch/sh/r/z/c/s + i alone = empty final (空韻), not ㄧ
+    if (['zh','ch','sh','r','z','c','s'].includes(initial) && plain === 'i') { plain = ''; }
     let finalZy = '';
     const tryKeys = Object.keys(P2Z_FINALS).sort((a,b) => b.length - a.length);
     for (const k of tryKeys) {
