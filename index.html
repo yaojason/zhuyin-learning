@@ -172,27 +172,50 @@
       border-radius: 8px;
     }
     .diary-cell {
-      width: 50px;
-      height: 62px;
+      width: 56px;
+      height: 72px;
       border: 1.5px solid #ccc;
       border-radius: 4px;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      background: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .diary-cell .ch {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--text);
+    }
+    .diary-cell .zy-col {
+      width: 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: white;
-      position: relative;
+      gap: 0px;
+      padding: 2px 1px;
+      border-left: 1px solid #eee;
+      background: #fafaf5;
     }
-    .diary-cell .zy {
-      font-size: 16px;
-      font-weight: bold;
-      color: var(--text);
-      line-height: 1.2;
-    }
-    .diary-cell .ch {
+    .diary-cell .zy-col span {
       font-size: 11px;
-      color: #bbb;
-      margin-top: 2px;
+      line-height: 1.1;
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .diary-cell .tone-mark {
+      position: absolute;
+      top: 2px;
+      right: 1px;
+      font-size: 10px;
+      color: #3498db;
+      font-weight: bold;
     }
     .diary-cell.weak {
       border-color: var(--primary);
@@ -985,6 +1008,21 @@
       document.getElementById('diaryReadBack').addEventListener('click', () => this.readBack());
     },
 
+    splitZhuyin(zy) {
+      const toneChars = ['ˉ','ˊ','ˇ','ˋ','˙'];
+      let tone = '';
+      let body = zy;
+      for (const t of toneChars) {
+        if (zy.endsWith(t)) { tone = t; body = zy.slice(0, -1); break; }
+      }
+      const allZy = ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ','ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ㄧ','ㄨ','ㄩ'];
+      const parts = [];
+      for (const ch of body) {
+        if (allZy.includes(ch)) parts.push(ch);
+      }
+      return { parts, tone };
+    },
+
     renderGrid() {
       const grid = document.getElementById('diaryGrid');
       grid.innerHTML = '';
@@ -996,14 +1034,28 @@
         } else {
           const isWeak = APP.data.weakItems.some(w => b.zhuyin.includes(w));
           cell.className = 'diary-cell' + (isWeak ? ' weak' : '') + (b.unknown ? ' weak' : '');
-          const zy = document.createElement('div');
-          zy.className = 'zy';
-          zy.textContent = b.zhuyin;
+
           const ch = document.createElement('div');
           ch.className = 'ch';
           ch.textContent = b.unknown ? '？' : b.char;
-          cell.appendChild(zy);
           cell.appendChild(ch);
+
+          const { parts, tone } = this.splitZhuyin(b.zhuyin);
+          const zyCol = document.createElement('div');
+          zyCol.className = 'zy-col';
+          parts.forEach(p => {
+            const s = document.createElement('span');
+            s.textContent = p;
+            zyCol.appendChild(s);
+          });
+          cell.appendChild(zyCol);
+
+          if (tone) {
+            const tm = document.createElement('div');
+            tm.className = 'tone-mark';
+            tm.textContent = tone;
+            cell.appendChild(tm);
+          }
         }
         grid.appendChild(cell);
       });
