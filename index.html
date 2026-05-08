@@ -74,6 +74,20 @@
     .dark .draw-tool-btn { background: #1a1a2e; border-color: #445; color: #e8e8e8; }
     .dark .draw-tool-btn.active { background: #3a3a1e; border-color: #7a7a2a; }
     .dark .draw-color-btn.active { border-color: #fff; }
+    .stamp-btn {
+      width: 36px; height: 36px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: none;
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      padding: 0;
+    }
+    .stamp-btn:active { transform: scale(1.3); }
+    .stamp-btn.active { border-color: var(--primary); background: #fff5f5; }
+    .dark #stampPicker { background: #1a2a3e; border-color: #445; }
+    .dark .stamp-btn.active { background: #2a1a1e; }
     #tab-diary .diary-notebook { flex-shrink: 0; margin: 0 auto; }
     #tab-diary #diaryStreak { flex-shrink: 0; }
     .tab-bar {
@@ -515,7 +529,19 @@
               <button class="draw-tool-btn" id="drawEraser" title="橡皮擦">🧹</button>
               <button class="draw-tool-btn active" id="drawThin" data-width="3" title="細筆">╱</button>
               <button class="draw-tool-btn" id="drawThick" data-width="8" title="粗筆">╱</button>
+              <span style="width:1px;height:20px;background:#ccc;margin:0 2px;"></span>
+              <button class="draw-tool-btn" id="drawStampToggle" title="印章">🏆</button>
             </div>
+          </div>
+          <div id="stampPicker" style="display:none;padding:4px 8px;background:#fef9e7;border-bottom:1px solid #e8e0d0;text-align:center;">
+            <button class="stamp-btn" data-stamp="⭐">⭐</button>
+            <button class="stamp-btn" data-stamp="❤️">❤️</button>
+            <button class="stamp-btn" data-stamp="👍">👍</button>
+            <button class="stamp-btn" data-stamp="🌟">🌟</button>
+            <button class="stamp-btn" data-stamp="🎉">🎉</button>
+            <button class="stamp-btn" data-stamp="💯">💯</button>
+            <button class="stamp-btn" data-stamp="🌈">🌈</button>
+            <button class="stamp-btn" data-stamp="🦄">🦄</button>
           </div>
           <canvas id="diaryCanvas" width="380" height="200" style="background:white;touch-action:none;width:100%;display:block;"></canvas>
         </div>
@@ -1682,6 +1708,29 @@
         if (!this.isErasing) this.ctx.lineWidth = 8;
       });
 
+      // Drawing tools: stamp mode
+      this.stampMode = false;
+      this.activeStamp = '⭐';
+      this.stamps = [];
+      document.getElementById('drawStampToggle').addEventListener('click', () => {
+        this.stampMode = !this.stampMode;
+        document.getElementById('drawStampToggle').classList.toggle('active', this.stampMode);
+        document.getElementById('stampPicker').style.display = this.stampMode ? '' : 'none';
+        if (this.stampMode) {
+          this.isErasing = false;
+          document.getElementById('drawEraser').classList.remove('active');
+          this.ctx.globalCompositeOperation = 'source-over';
+        }
+      });
+      document.querySelectorAll('.stamp-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.stamp-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.activeStamp = btn.dataset.stamp;
+        });
+      });
+      document.querySelector('.stamp-btn').classList.add('active');
+
       // Handwriting canvas (for writing zhuyin)
       const wCanvas = document.getElementById('diaryWriteCanvas');
       if (wCanvas) {
@@ -1819,8 +1868,20 @@
 
     startDraw(e) {
       const rect = e.target.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const scaleX = e.target.width / rect.width;
+      const scaleY = e.target.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      if (this.stampMode) {
+        this.ctx.globalCompositeOperation = 'source-over';
+        this.ctx.font = '36px serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(this.activeStamp, x, y);
+        this.stamps.push({ emoji: this.activeStamp, x, y });
+        SFX.play(880, 0.1);
+        return;
+      }
       this.currentStroke = [{
         x, y,
         color: this.drawColor,
@@ -1832,10 +1893,12 @@
     },
 
     draw(e) {
-      if (this.currentStroke.length === 0) return;
+      if (this.stampMode || this.currentStroke.length === 0) return;
       const rect = e.target.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const scaleX = e.target.width / rect.width;
+      const scaleY = e.target.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
       this.currentStroke.push({ x, y });
       this.ctx.lineTo(x, y);
       this.ctx.stroke();
@@ -1855,6 +1918,7 @@
 
     clearAll() {
       this.strokes = [];
+      this.stamps = [];
       this.cells = [];
       this.originalText = '';
       this.ctx.clearRect(0, 0, 380, 200);
@@ -1874,6 +1938,13 @@
         this.ctx.moveTo(stroke[0].x, stroke[0].y);
         stroke.forEach(p => this.ctx.lineTo(p.x, p.y));
         this.ctx.stroke();
+      });
+      this.stamps.forEach(s => {
+        this.ctx.globalCompositeOperation = 'source-over';
+        this.ctx.font = '36px serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(s.emoji, s.x, s.y);
       });
       this.ctx.globalCompositeOperation = this.isErasing ? 'destination-out' : 'source-over';
       this.ctx.strokeStyle = this.drawColor;
