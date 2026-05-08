@@ -291,7 +291,7 @@
       </div>
       <div id="pinyinFeedback" style="font-size:24px;min-height:40px;margin-top:12px;"></div>
       <div style="font-size:14px;color:#888;margin-top:8px;">
-        Level: <span id="pinyinLevel">1</span>
+        Level: <span id="pinyinLevel">1</span> · 連對 5 題升級
       </div>
     </div>
 
@@ -819,9 +819,11 @@
     currentWord: null,
     step: 0,
     level: 1,
+    correctStreak: 0,
 
     init() {
       this.level = APP.data.progress.pinyin.level;
+      this.correctStreak = 0;
       document.getElementById('pinyinLevel').textContent = this.level;
       this.nextWord();
     },
@@ -907,21 +909,39 @@
       });
     },
 
+    levelUp() {
+      if (this.level < 3) {
+        this.level++;
+        APP.data.progress.pinyin.level = this.level;
+        Storage.save(APP.data);
+        document.getElementById('pinyinLevel').textContent = this.level;
+        document.getElementById('pinyinFeedback').textContent = `🎉 升級！Level ${this.level}`;
+      }
+    },
+
     checkAnswer(selected, correct, btn, container) {
       const feedback = document.getElementById('pinyinFeedback');
       if (selected === correct) {
         feedback.textContent = '👍';
         this.step++;
         if (this.step > 2) {
-          feedback.textContent = '⭐ ' + randomPraise();
+          this.correctStreak++;
+          if (this.correctStreak >= 5 && this.level < 3) {
+            this.levelUp();
+            this.correctStreak = 0;
+            setTimeout(() => this.nextWord(), 1500);
+          } else {
+            feedback.textContent = `⭐ ${randomPraise()} (${this.correctStreak}/5)`;
+            setTimeout(() => this.nextWord(), 1200);
+          }
           Storage.recordAnswer(APP.data, true);
           const [,char] = this.currentWord;
           TTS.speak(char, APP.data.settings.speechRate);
-          setTimeout(() => this.nextWord(), 1200);
         } else {
           setTimeout(() => this.render(), 400);
         }
       } else {
+        this.correctStreak = 0;
         feedback.textContent = randomEncourage();
         btn.style.opacity = '0.3';
         btn.disabled = true;
