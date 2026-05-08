@@ -850,14 +850,39 @@
   Storage.addStar = function(data) {
     origAddStar(data);
     showStarBurst();
+    SFX.star();
+  };
+
+  // === SOUND EFFECTS (Web Audio API) ===
+  const SFX = {
+    ctx: null,
+    getCtx() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); return this.ctx; },
+    play(freq, dur, type = 'sine') {
+      try {
+        const ctx = this.getCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+      } catch {}
+    },
+    correct() { this.play(523, 0.15); setTimeout(() => this.play(659, 0.15), 100); setTimeout(() => this.play(784, 0.3), 200); },
+    wrong() { this.play(200, 0.3, 'square'); },
+    star() { this.play(784, 0.1); setTimeout(() => this.play(988, 0.1), 80); setTimeout(() => this.play(1175, 0.3), 160); },
   };
 
   // === FEEDBACK MESSAGES ===
   const PRAISE = ['好棒！','太厲害了！','你好聰明！','繼續加油！','很棒喔！','哇！好厲害！'];
   const ENCOURAGE = ['再試一次！','沒關係！','加油！你可以的！','看看這個！'];
 
-  function randomPraise() { return PRAISE[Math.floor(Math.random() * PRAISE.length)]; }
-  function randomEncourage() { return ENCOURAGE[Math.floor(Math.random() * ENCOURAGE.length)]; }
+  function randomPraise() { SFX.correct(); return PRAISE[Math.floor(Math.random() * PRAISE.length)]; }
+  function randomEncourage() { SFX.wrong(); return ENCOURAGE[Math.floor(Math.random() * ENCOURAGE.length)]; }
 
   // === FLASHCARD ===
   const Flashcard = {
