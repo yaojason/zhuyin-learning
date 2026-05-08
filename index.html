@@ -1415,7 +1415,11 @@
           const type = ALL_ZY_CHARS.includes(symbol) ? 'zy' : (TONE_CHARS.includes(symbol) ? 'tone' : 'punct');
           this.cells.push({ symbol, type });
           this.renderGrid();
-          TTS.speak(symbol, 0.3);
+          if (ZHUYIN_AUDIO_MAP[symbol]) {
+            new Audio(ZHUYIN_AUDIO_MAP[symbol]).play().catch(() => {});
+          } else if (TONE_CHARS.includes(symbol)) {
+            SFX.play(440, 0.1);
+          }
         });
       });
       document.getElementById('zkSpace').addEventListener('click', () => {
