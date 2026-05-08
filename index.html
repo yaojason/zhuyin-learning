@@ -1017,6 +1017,7 @@
         this.correctStreak = 0;
         feedback.textContent = randomEncourage();
         btn.style.opacity = '0.3';
+        btn.style.transform = 'scale(0.9)';
         btn.disabled = true;
         Storage.recordAnswer(APP.data, false);
         const [zy] = this.currentWord;
@@ -1089,16 +1090,26 @@
       const feedback = document.getElementById('listenFeedback');
       if (selected === this.correct) {
         feedback.textContent = '⭐ ' + randomPraise();
+        btn.style.background = 'var(--success)';
+        btn.style.transform = 'scale(1.15)';
+        btn.classList.add('bounce');
+        container.querySelectorAll('button').forEach(b => {
+          if (b !== btn) { b.style.opacity = '0.3'; b.disabled = true; }
+        });
+        const playBtn = document.getElementById('listenPlayBtn');
+        playBtn.textContent = '🎉';
+        setTimeout(() => { playBtn.textContent = '🔊'; }, 1200);
         APP.data.progress.listening.correct += 1;
         APP.data.progress.listening.total += 1;
         Storage.recordAnswer(APP.data, true);
         const [zy] = this.currentWord;
         for (const ch of zy) { if (ALL_ZY_CHARS.includes(ch)) Storage.removeWeakItem(APP.data, ch); }
-        setTimeout(() => this.nextQuestion(), 1000);
+        setTimeout(() => this.nextQuestion(), 1500);
       } else {
         feedback.textContent = randomEncourage();
         btn.style.opacity = '0.3';
         btn.disabled = true;
+        btn.style.transform = 'scale(0.9)';
         APP.data.progress.listening.total += 1;
         Storage.recordAnswer(APP.data, false);
         const [zy] = this.currentWord;
