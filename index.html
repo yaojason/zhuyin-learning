@@ -234,11 +234,21 @@
     }
     @keyframes starPop {
       0% { transform: scale(0) rotate(0deg); opacity: 0; }
-      50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
-      100% { transform: scale(1) rotate(360deg); opacity: 1; }
+      50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+      100% { transform: scale(0) rotate(360deg); opacity: 0; }
+    }
+    @keyframes starFly {
+      0% { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes confetti {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-200px) rotate(720deg); opacity: 0; }
     }
     .bounce { animation: bounce 0.4s ease; }
-    .star-pop { animation: starPop 0.6s ease; }
+    .star-pop { animation: starPop 0.8s ease forwards; }
+    .star-fly { animation: starFly 1s ease forwards; }
+    .confetti { animation: confetti 1.2s ease forwards; }
     /* Hide scrollbar */
     .tab-content::-webkit-scrollbar { display: none; }
     .tab-content { -ms-overflow-style: none; scrollbar-width: none; }
@@ -743,12 +753,30 @@
   // === ANIMATIONS ===
   function showStarBurst() {
     const overlay = document.getElementById('starOverlay');
-    const star = document.createElement('div');
-    star.textContent = '⭐';
-    star.style.cssText = `position:absolute;top:50%;left:50%;font-size:60px;transform:translate(-50%,-50%);`;
-    star.classList.add('star-pop');
-    overlay.appendChild(star);
-    setTimeout(() => star.remove(), 700);
+    const emojis = ['⭐','🌟','✨','💫','🎉'];
+    const big = document.createElement('div');
+    big.textContent = '⭐';
+    big.style.cssText = 'position:absolute;top:50%;left:50%;font-size:80px;transform:translate(-50%,-50%);';
+    big.classList.add('star-pop');
+    overlay.appendChild(big);
+    setTimeout(() => big.remove(), 800);
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div');
+      p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      const angle = (i / 8) * Math.PI * 2;
+      const dist = 80 + Math.random() * 60;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist;
+      p.style.cssText = `position:absolute;top:50%;left:50%;font-size:${24+Math.random()*20}px;transform:translate(-50%,-50%);--tx:${tx}px;--ty:${ty}px;`;
+      p.style.animation = `starFly 0.8s ease forwards`;
+      p.style.animationDelay = `${i * 0.05}s`;
+      p.animate([
+        { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.3)`, opacity: 0 }
+      ], { duration: 800, delay: i * 50, fill: 'forwards' });
+      overlay.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }
   }
 
   // Patch Storage.addStar to trigger animation
