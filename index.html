@@ -858,6 +858,7 @@
       el.classList.remove('bounce');
       void el.offsetWidth;
       el.classList.add('bounce');
+      setTimeout(() => this.playSound(), 300);
     },
 
     async playSound() {
@@ -865,7 +866,16 @@
       el.classList.remove('bounce');
       void el.offsetWidth;
       el.classList.add('bounce');
+      const knowBtn = document.getElementById('fcKnow');
+      const dontBtn = document.getElementById('fcDontKnow');
+      knowBtn.style.opacity = '0.5';
+      dontBtn.style.opacity = '0.5';
       await TTS.speak(this.current, APP.data.settings.speechRate);
+      knowBtn.style.opacity = '1';
+      dontBtn.style.opacity = '1';
+      knowBtn.classList.add('bounce');
+      dontBtn.classList.add('bounce');
+      setTimeout(() => { knowBtn.classList.remove('bounce'); dontBtn.classList.remove('bounce'); }, 400);
     },
 
     answer(known) {
