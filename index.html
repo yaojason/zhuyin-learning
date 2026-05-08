@@ -334,6 +334,22 @@
     .zk-t { background: #fff3e0; border-color: #ffcc80; }
     .zk-wide { width: 64px; font-size: 13px; }
     .zk-del { width: 48px; background: #fee; color: var(--primary); }
+    /* Flashcard 3D flip */
+    .fc-flip-container { transform-style: preserve-3d; }
+    .fc-flip-container.flipped { transform: rotateY(180deg); }
+    .fc-face {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .fc-back {
+      transform: rotateY(180deg);
+    }
     /* Animations */
     @keyframes bounce {
       0%, 100% { transform: scale(1); }
@@ -444,9 +460,18 @@
         <button class="mode-btn" data-mode="finals">韻母</button>
         <button class="mode-btn" data-mode="weak">弱項</button>
       </div>
-      <div class="card" id="flashcard" style="margin:20px 0;min-height:220px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;">
-        <span id="flashcardSymbol" style="font-size:120px;font-weight:bold;"></span>
-        <canvas id="fcStrokeCanvas" width="200" height="200" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;display:none;"></canvas>
+      <div id="flashcardWrapper" style="margin:20px 0;perspective:800px;width:100%;max-width:350px;">
+        <div id="flashcard" class="card fc-flip-container" style="min-height:220px;cursor:pointer;position:relative;transition:transform 0.5s;transform-style:preserve-3d;">
+          <div class="fc-face fc-front">
+            <span id="flashcardSymbol" style="font-size:120px;font-weight:bold;"></span>
+            <canvas id="fcStrokeCanvas" width="200" height="200" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;display:none;"></canvas>
+          </div>
+          <div class="fc-face fc-back" id="fcBack">
+            <div id="fcBackChar" style="font-size:72px;margin-bottom:8px;"></div>
+            <div id="fcBackWord" style="font-size:20px;color:#666;margin-bottom:4px;"></div>
+            <div id="fcBackHint" style="font-size:14px;color:#999;">點卡片翻回去</div>
+          </div>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin-top:8px;justify-content:center;">
         <div style="font-size:13px;color:#888;" id="fcProgress">0 / 0</div>
@@ -1052,11 +1077,26 @@
   function randomPraise() { SFX.correct(); return PRAISE[Math.floor(Math.random() * PRAISE.length)]; }
   function randomEncourage() { SFX.wrong(); return ENCOURAGE[Math.floor(Math.random() * ENCOURAGE.length)]; }
 
+  // === FLASHCARD EXAMPLE MAP ===
+  const FC_EXAMPLES = {
+    'ㄅ':'爸爸 👨','ㄆ':'蘋果 🍎','ㄇ':'媽媽 👩','ㄈ':'飛機 ✈️',
+    'ㄉ':'弟弟 👦','ㄊ':'兔子 🐰','ㄋ':'牛奶 🥛','ㄌ':'老師 👩‍🏫',
+    'ㄍ':'狗狗 🐕','ㄎ':'哭哭 😢','ㄏ':'花朵 🌸','ㄐ':'雞蛋 🥚',
+    'ㄑ':'汽車 🚗','ㄒ':'西瓜 🍉','ㄓ':'蜘蛛 🕷️','ㄔ':'吃飯 🍚',
+    'ㄕ':'獅子 🦁','ㄖ':'太陽 ☀️','ㄗ':'做操 🤸','ㄘ':'草地 🌿',
+    'ㄙ':'三個 3️⃣','ㄚ':'阿姨 👧','ㄛ':'喔喔 🐓','ㄜ':'鵝鵝 🦢',
+    'ㄝ':'爺爺 👴','ㄞ':'愛心 ❤️','ㄟ':'飛飛 🦅','ㄠ':'小貓 🐱',
+    'ㄡ':'小狗 🐶','ㄢ':'安全 🛡️','ㄣ':'恩恩 😊','ㄤ':'糖果 🍬',
+    'ㄥ':'風箏 🪁','ㄦ':'耳朵 👂','ㄧ':'椅子 🪑','ㄨ':'烏龜 🐢',
+    'ㄩ':'下雨 🌧️',
+  };
+
   // === FLASHCARD ===
   const Flashcard = {
     deck: [],
     current: null,
     mode: 'all',
+    isFlipped: false,
 
     strokeAnim: null,
     roundCorrect: 0,
@@ -1066,7 +1106,7 @@
 
     init() {
       this.setMode('all');
-      document.getElementById('flashcard').addEventListener('click', () => this.playSound());
+      document.getElementById('flashcard').addEventListener('click', () => this.flipCard());
       document.getElementById('fcKnow').addEventListener('click', () => this.answer(true));
       document.getElementById('fcDontKnow').addEventListener('click', () => this.answer(false));
       document.getElementById('fcStrokeBtn').addEventListener('click', () => this.showStroke());
@@ -1135,6 +1175,8 @@
     next() {
       if (this.deck.length === 0) { this.showRoundSummary(); return; }
       this.current = this.deck.pop();
+      this.isFlipped = false;
+      document.getElementById('flashcard').classList.remove('flipped');
       this.updateProgress();
       const el = document.getElementById('flashcardSymbol');
       el.textContent = this.current;
@@ -1142,6 +1184,20 @@
       void el.offsetWidth;
       el.classList.add('bounce');
       setTimeout(() => this.playSound(), 300);
+    },
+
+    flipCard() {
+      if (!this.current) return;
+      const card = document.getElementById('flashcard');
+      this.isFlipped = !this.isFlipped;
+      card.classList.toggle('flipped', this.isFlipped);
+      if (this.isFlipped) {
+        const example = FC_EXAMPLES[this.current] || '';
+        const parts = example.split(' ');
+        document.getElementById('fcBackChar').textContent = parts[1] || '';
+        document.getElementById('fcBackWord').textContent = parts[0] || this.current;
+      }
+      this.playSound();
     },
 
     showStroke() {
