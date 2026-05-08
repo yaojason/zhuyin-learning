@@ -385,8 +385,12 @@
       <div class="diary-notebook">
         <!-- 標題列 -->
         <div class="diary-header">
-          <span id="diaryDate" style="font-size:14px;"></span>
-          <span id="diaryPrompt" style="font-size:16px;"></span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button id="diaryPrev" style="border:none;background:none;font-size:18px;cursor:pointer;">◀</button>
+            <input type="date" id="diaryDatePicker" style="font-size:14px;padding:2px 4px;border:1px solid #ccc;border-radius:6px;">
+            <button id="diaryNext" style="border:none;background:none;font-size:18px;cursor:pointer;">▶</button>
+          </div>
+          <span id="diaryPrompt" style="font-size:14px;"></span>
         </div>
 
         <!-- 畫圖區 -->
@@ -1303,11 +1307,28 @@
     ctx: null,
     originalText: '',
     cells: [],
+    currentDate: new Date().toISOString().slice(0, 10),
 
     init() {
       const prompt = DIARY_PROMPTS[Math.floor(Math.random() * DIARY_PROMPTS.length)];
       document.getElementById('diaryPrompt').textContent = prompt;
-      document.getElementById('diaryDate').textContent = new Date().toLocaleDateString('zh-TW');
+
+      const picker = document.getElementById('diaryDatePicker');
+      picker.value = this.currentDate;
+      picker.addEventListener('change', () => this.loadDate(picker.value));
+      document.getElementById('diaryPrev').addEventListener('click', () => {
+        const d = new Date(this.currentDate);
+        d.setDate(d.getDate() - 1);
+        this.loadDate(d.toISOString().slice(0, 10));
+      });
+      document.getElementById('diaryNext').addEventListener('click', () => {
+        const d = new Date(this.currentDate);
+        d.setDate(d.getDate() + 1);
+        const today = new Date().toISOString().slice(0, 10);
+        const next = d.toISOString().slice(0, 10);
+        if (next <= today) this.loadDate(next);
+      });
+
       this.updateStreak();
 
       if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -1451,6 +1472,50 @@
       });
     },
 
+    loadDate(dateStr) {
+      this.currentDate = dateStr;
+      document.getElementById('diaryDatePicker').value = dateStr;
+      const entry = APP.data.diary.find(d => d.date === dateStr);
+      if (entry) {
+        this.originalText = entry.text || '';
+        document.getElementById('diaryOriginal').textContent = this.originalText ? '原文：' + this.originalText : '';
+        if (entry.zhuyin) {
+          this.cells = [];
+          for (const ch of entry.zhuyin) {
+            if (ALL_ZY_CHARS.includes(ch)) this.cells.push({ symbol: ch, type: 'zy' });
+            else if (TONE_CHARS.includes(ch)) this.cells.push({ symbol: ch, type: 'tone' });
+            else if (ch === ' ') this.cells.push({ symbol: '', type: 'space' });
+            else if (/[，。！？]/.test(ch)) this.cells.push({ symbol: ch, type: 'punct' });
+          }
+          this.renderGrid();
+        } else if (this.originalText && typeof pinyinPro !== 'undefined') {
+          this.cells = charToZhuyinCells(this.originalText);
+          this.renderGrid();
+        } else {
+          this.cells = [];
+          this.renderGrid();
+        }
+        if (entry.drawing) {
+          const img = new Image();
+          img.onload = () => {
+            this.ctx.clearRect(0, 0, 350, 140);
+            this.ctx.drawImage(img, 0, 0, 350, 140);
+          };
+          img.src = entry.drawing;
+          this.strokes = [];
+        }
+      } else {
+        this.originalText = '';
+        this.cells = [];
+        this.strokes = [];
+        this.ctx.clearRect(0, 0, 350, 140);
+        document.getElementById('diaryOriginal').textContent = '';
+        this.renderGrid();
+      }
+      const prompt = DIARY_PROMPTS[Math.floor(Math.random() * DIARY_PROMPTS.length)];
+      document.getElementById('diaryPrompt').textContent = prompt;
+    },
+
     toggleRecording() {
       if (!this.recognition) return;
       if (this.isRecording) {
@@ -1522,12 +1587,12 @@
     saveDiary() {
       const canvas = document.getElementById('diaryCanvas');
       const drawing = canvas.toDataURL('image/png');
-      const today = new Date().toISOString().slice(0, 10);
+      const saveDate = this.currentDate;
       const zhuyinText = this.cells.filter(c => c.type !== 'space').map(c => c.symbol).join('');
 
-      const entry = { date: today, text: this.originalText, zhuyin: zhuyinText, drawing };
+      const entry = { date: saveDate, text: this.originalText, zhuyin: zhuyinText, drawing };
 
-      const idx = APP.data.diary.findIndex(d => d.date === today);
+      const idx = APP.data.diary.findIndex(d => d.date === saveDate);
       if (idx >= 0) APP.data.diary[idx] = entry;
       else APP.data.diary.push(entry);
 
