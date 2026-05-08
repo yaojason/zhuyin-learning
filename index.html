@@ -491,6 +491,9 @@
         <h3 style="margin-bottom:12px;">日記回顧</h3>
         <div id="parentDiary" style="max-height:400px;overflow-y:auto;text-align:left;"></div>
       </div>
+      <div class="card" style="margin-bottom:16px;padding:20px;text-align:center;">
+        <button class="btn-big btn-primary" id="parentExport" style="font-size:16px;padding:10px 20px;">📊 匯出進度報告</button>
+      </div>
       <div class="card" style="padding:20px;">
         <h3 style="margin-bottom:12px;">設定</h3>
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
@@ -1654,6 +1657,102 @@
         Storage.save(APP.data);
         applyDarkMode();
       });
+
+      document.getElementById('parentExport').addEventListener('click', () => this.exportReport());
+    },
+
+    exportReport() {
+      const c = document.createElement('canvas');
+      c.width = 600; c.height = 800;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#FFF9F0'; ctx.fillRect(0, 0, 600, 800);
+
+      ctx.fillStyle = '#2D3436';
+      ctx.font = 'bold 28px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      const name = APP.data.settings.childName || '小朋友';
+      ctx.fillText(`📊 ${name} 的注音學習報告`, 300, 50);
+
+      ctx.font = '14px -apple-system, sans-serif';
+      ctx.fillStyle = '#888';
+      ctx.fillText(new Date().toLocaleDateString('zh-TW'), 300, 75);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const stats = APP.data.todayStats;
+      const q = stats.date === today ? stats.questions : 0;
+      const acc = q > 0 ? Math.round(stats.correct / q * 100) : 0;
+
+      ctx.textAlign = 'left';
+      ctx.font = 'bold 20px -apple-system, sans-serif';
+      ctx.fillStyle = '#2D3436';
+      ctx.fillText('今日統計', 40, 120);
+      ctx.font = '16px -apple-system, sans-serif';
+      ctx.fillText(`題數：${q}`, 40, 150);
+      ctx.fillText(`正確率：${acc}%`, 200, 150);
+      ctx.fillText(`連續天數：${APP.data.streak}`, 380, 150);
+      ctx.fillText(`累積星星：${APP.data.stars} ⭐`, 40, 180);
+
+      // 7-day chart
+      ctx.font = 'bold 20px -apple-system, sans-serif';
+      ctx.fillText('7 日趨勢', 40, 220);
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+        const h = APP.data.dailyHistory[d] || { q: 0 };
+        if (d === today && stats.date === today) h.q = stats.questions;
+        days.push({ date: d, q: h.q });
+      }
+      const maxQ = Math.max(...days.map(d => d.q), 1);
+      const goal = APP.data.settings.dailyGoal;
+      days.forEach((d, i) => {
+        const x = 40 + i * 75;
+        const barH = Math.max(Math.round((d.q / Math.max(maxQ, goal)) * 100), 4);
+        ctx.fillStyle = d.q >= goal ? '#6BCB77' : (d.q > 0 ? '#4ECDC4' : '#eee');
+        ctx.fillRect(x, 340 - barH, 50, barH);
+        ctx.fillStyle = '#2D3436';
+        ctx.font = '12px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(d.q || '', x + 25, 335 - barH);
+        ctx.fillStyle = '#888';
+        ctx.fillText(d.date.slice(5), x + 25, 358);
+        ctx.textAlign = 'left';
+      });
+
+      // Weak items
+      ctx.font = 'bold 20px -apple-system, sans-serif';
+      ctx.fillStyle = '#2D3436';
+      ctx.fillText('弱項', 40, 400);
+      ctx.font = '24px -apple-system, sans-serif';
+      const weaks = APP.data.weakItems.slice(0, 10);
+      ctx.fillText(weaks.length > 0 ? weaks.join('  ') : '沒有弱項 👍', 40, 435);
+
+      // Diary count
+      ctx.font = 'bold 20px -apple-system, sans-serif';
+      ctx.fillText('日記', 40, 480);
+      ctx.font = '16px -apple-system, sans-serif';
+      ctx.fillText(`共 ${APP.data.diary.length} 篇日記`, 40, 510);
+
+      // Recent diary entries
+      const entries = [...APP.data.diary].reverse().slice(0, 5);
+      let y = 540;
+      entries.forEach(e => {
+        ctx.font = '13px -apple-system, sans-serif';
+        ctx.fillStyle = '#666';
+        ctx.fillText(`${e.date}：${e.text || '(手寫)'}`, 40, y);
+        y += 22;
+      });
+
+      // Footer
+      ctx.fillStyle = '#ccc';
+      ctx.font = '12px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('注音小天地 — 學習進度報告', 300, 780);
+
+      // Download
+      const link = document.createElement('a');
+      link.download = `注音報告_${name}_${today}.png`;
+      link.href = c.toDataURL('image/png');
+      link.click();
     },
 
     refresh() {
