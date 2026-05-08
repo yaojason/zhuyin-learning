@@ -833,6 +833,10 @@
     mode: 'all',
 
     strokeAnim: null,
+    roundCorrect: 0,
+    roundWrong: 0,
+    roundStart: 0,
+    roundTotal: 0,
 
     init() {
       this.setMode('all');
@@ -858,6 +862,10 @@
         case 'weak': this.deck = APP.data.weakItems.length > 0 ? [...APP.data.weakItems] : [...ALL_ZHUYIN]; break;
       }
       this.shuffle();
+      this.roundCorrect = 0;
+      this.roundWrong = 0;
+      this.roundStart = Date.now();
+      this.roundTotal = this.deck.length;
       this.next();
     },
 
@@ -868,8 +876,31 @@
       }
     },
 
+    showRoundSummary() {
+      const secs = Math.round((Date.now() - this.roundStart) / 1000);
+      const pct = this.roundTotal > 0 ? Math.round(this.roundCorrect / this.roundTotal * 100) : 0;
+      const el = document.getElementById('flashcardSymbol');
+      el.style.fontSize = '18px';
+      el.innerHTML = `<div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+        <div style="font-size:20px;font-weight:bold;margin-bottom:8px;">練習完成！</div>
+        <div style="font-size:16px;color:#666;">
+          ✅ 認得：${this.roundCorrect} 個<br>
+          ❌ 不確定：${this.roundWrong} 個<br>
+          ⏱ 用時：${secs} 秒<br>
+          📊 正確率：${pct}%
+        </div>
+        <div style="margin-top:12px;font-size:14px;color:var(--secondary);cursor:pointer;" id="fcRestart">👉 再來一輪</div>
+      </div>`;
+      document.getElementById('fcRestart').addEventListener('click', () => {
+        el.style.fontSize = '120px';
+        el.innerHTML = '';
+        this.setMode(this.mode);
+      });
+    },
+
     next() {
-      if (this.deck.length === 0) this.setMode(this.mode);
+      if (this.deck.length === 0) { this.showRoundSummary(); return; }
       this.current = this.deck.pop();
       const el = document.getElementById('flashcardSymbol');
       el.textContent = this.current;
@@ -956,11 +987,12 @@
 
       if (known) {
         record.correct += 1;
+        this.roundCorrect += 1;
         Storage.removeWeakItem(APP.data, symbol);
       } else {
         record.wrong += 1;
+        this.roundWrong += 1;
         Storage.addWeakItem(APP.data, symbol);
-        this.deck.unshift(symbol);
       }
 
       Storage.recordAnswer(APP.data, known);
