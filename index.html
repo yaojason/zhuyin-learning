@@ -437,7 +437,7 @@
       </div>
       <div class="card" style="margin-bottom:16px;padding:20px;">
         <h3 style="margin-bottom:12px;">日記回顧</h3>
-        <div id="parentDiary" style="max-height:200px;overflow-y:auto;text-align:left;"></div>
+        <div id="parentDiary" style="max-height:400px;overflow-y:auto;text-align:left;"></div>
       </div>
       <div class="card" style="padding:20px;">
         <h3 style="margin-bottom:12px;">設定</h3>
@@ -1449,9 +1449,34 @@
       if (entries.length === 0) {
         diaryEl.textContent = '還沒有日記';
       } else {
-        diaryEl.innerHTML = entries.map(e =>
-          `<div style="padding:8px 0;border-bottom:1px solid #eee;"><strong>${e.date}</strong>：${e.text || '(手寫)'}</div>`
-        ).join('');
+        diaryEl.innerHTML = '';
+        entries.forEach(e => {
+          const card = document.createElement('div');
+          card.style.cssText = 'padding:10px 0;border-bottom:1px solid #eee;';
+          const header = document.createElement('div');
+          header.style.cssText = 'font-weight:bold;margin-bottom:6px;';
+          header.textContent = `📅 ${e.date}`;
+          card.appendChild(header);
+          if (e.drawing) {
+            const img = document.createElement('img');
+            img.src = e.drawing;
+            img.style.cssText = 'width:100%;max-width:280px;border:1px solid #eee;border-radius:8px;margin-bottom:6px;';
+            card.appendChild(img);
+          }
+          if (e.text) {
+            const txt = document.createElement('div');
+            txt.style.cssText = 'font-size:13px;color:#666;margin-bottom:4px;';
+            txt.textContent = '📝 ' + e.text;
+            card.appendChild(txt);
+          }
+          if (e.zhuyin) {
+            const zy = document.createElement('div');
+            zy.style.cssText = 'font-size:16px;letter-spacing:2px;color:var(--text);';
+            zy.textContent = e.zhuyin;
+            card.appendChild(zy);
+          }
+          diaryEl.appendChild(card);
+        });
       }
 
       document.getElementById('settingGoal').value = APP.data.settings.dailyGoal;
