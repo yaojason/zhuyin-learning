@@ -21,7 +21,7 @@
       font-family: -apple-system, 'Noto Sans TC', sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -36,14 +36,46 @@
       margin: 0 auto;
       width: 100%;
       height: 100vh;
+      min-height: 0;
+      overflow: hidden;
     }
     .tab-content {
       flex: 1;
       overflow-y: auto;
       padding: 20px;
       display: none;
+      min-height: 0;
     }
     .tab-content.active { display: flex; flex-direction: column; align-items: center; }
+    #tab-diary.active { padding: 10px; }
+    .draw-color-btn {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.15s;
+    }
+    .draw-color-btn.active { border-color: #333; transform: scale(1.2); box-shadow: 0 0 4px rgba(0,0,0,0.3); }
+    .draw-tool-btn {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      border: 1.5px solid #ccc;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .draw-tool-btn.active { background: var(--accent); border-color: #e0c040; }
+    #drawThick { font-size: 18px; font-weight: bold; }
+    .dark .draw-tool-btn { background: #1a1a2e; border-color: #445; color: #e8e8e8; }
+    .dark .draw-tool-btn.active { background: #3a3a1e; border-color: #7a7a2a; }
+    .dark .draw-color-btn.active { border-color: #fff; }
+    #tab-diary .diary-notebook { flex-shrink: 0; margin: 0 auto; }
+    #tab-diary #diaryStreak { flex-shrink: 0; }
     .tab-bar {
       display: flex;
       justify-content: space-around;
@@ -137,44 +169,87 @@
       background: var(--secondary);
       color: white;
     }
-    /* Diary notebook */
+    /* Diary notebook - 學習單風格 */
     .diary-notebook {
-      background: white;
-      border-radius: 16px;
-      padding: 16px;
+      background: #fffef8;
+      border-radius: 4px;
+      padding: 0;
       width: 100%;
-      max-width: 380px;
-      box-shadow: var(--shadow);
-      border: 2px solid #e0d5c5;
+      max-width: 400px;
+      margin: 0 auto;
+      box-shadow: 2px 3px 8px rgba(0,0,0,0.15);
+      border: 3px solid #333;
+      position: relative;
+      overflow: hidden;
+    }
+    .diary-worksheet-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
     }
     .diary-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #f0e8da;
-      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-bottom: 2px solid #333;
+      background: #fff;
+      position: relative;
+      z-index: 1;
+    }
+    .diary-header-field {
+      font-size: 15px;
+      font-weight: bold;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .diary-header-field ruby { font-size: 15px; }
+    .diary-header-field rt { font-size: 9px; color: #888; }
+    .diary-header-field .field-value {
+      border-bottom: 1.5px solid #333;
+      padding: 0 6px;
+      min-width: 50px;
+      display: inline-block;
+      text-align: center;
+      color: #e74c3c;
+    }
+    .diary-draw-area {
+      border-bottom: 2px solid #333;
+      background: #fff;
+      position: relative;
+      z-index: 1;
+      min-height: 180px;
     }
     .diary-draw-label, .diary-grid-label {
-      font-size: 14px;
+      font-size: 13px;
       color: #888;
-      margin: 8px 0 4px;
+      margin: 0;
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.8);
+    }
+    .diary-grid-section {
+      background: #fffef8;
+      position: relative;
+      z-index: 1;
+      padding: 4px 0 0;
     }
     .diary-grid {
       display: grid;
-      grid-template-columns: repeat(7, 44px);
+      grid-template-columns: repeat(7, 1fr);
       gap: 0px;
       justify-content: center;
       min-height: 48px;
-      padding: 4px;
-      background: #fefcf7;
-      border: 1px solid #e8e0d0;
-      border-radius: 4px;
+      padding: 0;
+      background: #fffef8;
+      border: none;
+      border-radius: 0;
     }
     .diary-cell {
-      width: 44px;
-      height: 44px;
-      border: 1px solid #ccc;
+      aspect-ratio: 1;
+      border: 1.5px solid #888;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -182,6 +257,21 @@
       font-size: 26px;
       font-weight: bold;
       color: var(--text);
+      position: relative;
+    }
+    .diary-cell::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%;
+      border-top: 1px dashed #ccc;
+    }
+    .diary-cell::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 50%;
+      border-left: 1px dashed #ccc;
     }
     .diary-cell.weak {
       border-color: var(--primary);
@@ -191,11 +281,7 @@
       color: #e74c3c;
     }
     .diary-cell.space {
-      background: #f0efe8;
-      border-left: 2px solid #d0cfc0;
-      border-right: 2px solid #d0cfc0;
-      border-top: 1px dashed #ddd;
-      border-bottom: 1px dashed #ddd;
+      background: #f5f4ee;
     }
     /* Diary input mode buttons */
     .diary-input-btn {
@@ -264,20 +350,20 @@
       .tab-btn { font-size: 22px; padding: 6px 8px; }
       .btn-big { min-height: 48px; font-size: 18px; padding: 10px 20px; }
       #flashcardSymbol { font-size: 90px; }
-      .diary-notebook { padding: 10px; }
+      .diary-notebook { max-width: 100%; }
       .zk { width: 28px; height: 32px; font-size: 16px; }
       .zk-wide { width: 56px; font-size: 12px; }
       .zk-del { width: 40px; }
-      .diary-grid { grid-template-columns: repeat(8, 38px); }
-      .diary-cell { width: 38px; height: 38px; font-size: 22px; }
+      .diary-grid { grid-template-columns: repeat(7, 1fr); }
+      .diary-cell { font-size: 22px; }
       .card { padding: 16px; max-width: 100%; }
       .diary-input-btn { padding: 5px 10px; font-size: 12px; }
     }
     @media (max-width: 340px) {
       .zk { width: 24px; height: 28px; font-size: 14px; }
       .zk-wide { width: 48px; }
-      .diary-grid { grid-template-columns: repeat(7, 34px); }
-      .diary-cell { width: 34px; height: 34px; font-size: 20px; }
+      .diary-grid { grid-template-columns: repeat(6, 1fr); }
+      .diary-cell { font-size: 20px; }
     }
     @media (min-width: 768px) {
       .app-container { max-width: 600px; }
@@ -294,8 +380,13 @@
     .dark .mode-btn { background: #16213e; color: #e8e8e8; border-color: #0f3460; }
     .dark .mode-btn.active { background: #0f3460; }
     .dark .settings-btn { background: rgba(255,255,255,0.1); }
-    .dark .diary-notebook { background: #16213e; border-color: #0f3460; }
-    .dark .diary-cell { background: #1a1a2e; border-color: #333; }
+    .dark .diary-notebook { background: #16213e; border-color: #445; }
+    .dark .diary-header { background: #1a1a2e; border-color: #445; }
+    .dark .diary-draw-area { background: #1a1a2e; border-color: #445; }
+    .dark .diary-grid-section { background: #16213e; }
+    .dark .diary-cell { background: #1a1a2e; border-color: #445; }
+    .dark .diary-cell::before { border-color: #333; }
+    .dark .diary-cell::after { border-color: #333; }
     .dark .diary-cell.space { background: #222; }
     .dark .zk { background: #1a1a2e; border-color: #444; color: #e8e8e8; }
     .dark .zk-i { background: #1b3a1b; border-color: #2d5a2d; }
@@ -394,33 +485,56 @@
     <!-- Tab: Diary -->
     <div class="tab-content" id="tab-diary">
       <div class="diary-notebook">
-        <!-- 標題列 -->
+        <!-- 標題列：模仿學習單 header -->
         <div class="diary-header">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button id="diaryPrev" style="border:none;background:none;font-size:18px;cursor:pointer;">◀</button>
-            <input type="date" id="diaryDatePicker" style="font-size:14px;padding:2px 4px;border:1px solid #ccc;border-radius:6px;">
-            <button id="diaryNext" style="border:none;background:none;font-size:18px;cursor:pointer;">▶</button>
+          <div class="diary-header-field">
+            <ruby>日<rt>ㄖˋ</rt></ruby><ruby>期<rt>ㄑㄧˊ</rt></ruby>：
+            <span class="field-value">
+              <button id="diaryPrev" style="border:none;background:none;font-size:14px;cursor:pointer;padding:0;">◀</button>
+              <input type="date" id="diaryDatePicker" style="font-size:13px;padding:1px 2px;border:none;background:transparent;width:110px;text-align:center;">
+              <button id="diaryNext" style="border:none;background:none;font-size:14px;cursor:pointer;padding:0;">▶</button>
+            </span>
           </div>
-          <span id="diaryPrompt" style="font-size:14px;"></span>
+          <div class="diary-header-field">
+            <span id="diaryPrompt" style="font-size:13px;font-weight:normal;color:#666;"></span>
+          </div>
         </div>
 
-        <!-- 畫圖區 -->
-        <div class="diary-draw-label">✏️ 畫一畫</div>
-        <canvas id="diaryCanvas" width="350" height="140" style="border:1px solid #ccc;background:white;touch-action:none;width:100%;"></canvas>
+        <!-- 畫圖區：學習單上半部 -->
+        <div class="diary-draw-area">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;">
+            <div class="diary-draw-label" style="padding:0;margin:0;">✏️ <ruby>畫<rt>ㄏㄨㄚˋ</rt></ruby>一<ruby>畫<rt>ㄏㄨㄚˋ</rt></ruby></div>
+            <div id="diaryDrawTools" style="display:flex;align-items:center;gap:4px;">
+              <button class="draw-color-btn active" data-color="#2D3436" style="background:#2D3436;" title="黑色"></button>
+              <button class="draw-color-btn" data-color="#e74c3c" style="background:#e74c3c;" title="紅色"></button>
+              <button class="draw-color-btn" data-color="#2980b9" style="background:#2980b9;" title="藍色"></button>
+              <button class="draw-color-btn" data-color="#27ae60" style="background:#27ae60;" title="綠色"></button>
+              <button class="draw-color-btn" data-color="#f39c12" style="background:#f39c12;" title="橘色"></button>
+              <button class="draw-color-btn" data-color="#8e44ad" style="background:#8e44ad;" title="紫色"></button>
+              <span style="width:1px;height:20px;background:#ccc;margin:0 2px;"></span>
+              <button class="draw-tool-btn" id="drawEraser" title="橡皮擦">🧹</button>
+              <button class="draw-tool-btn active" id="drawThin" data-width="3" title="細筆">╱</button>
+              <button class="draw-tool-btn" id="drawThick" data-width="8" title="粗筆">╱</button>
+            </div>
+          </div>
+          <canvas id="diaryCanvas" width="380" height="200" style="background:white;touch-action:none;width:100%;display:block;"></canvas>
+        </div>
 
-        <!-- 注音方格區 -->
-        <div class="diary-grid-label">📝 注音日記</div>
-        <div id="diaryGrid" class="diary-grid"></div>
+        <!-- 注音方格區：學習單下半部 -->
+        <div class="diary-grid-section">
+          <div class="diary-grid-label">📝 <ruby>注<rt>ㄓㄨˋ</rt></ruby><ruby>音<rt>ㄧㄣ</rt></ruby><ruby>日<rt>ㄖˋ</rt></ruby><ruby>記<rt>ㄐㄧˋ</rt></ruby></div>
+          <div id="diaryGrid" class="diary-grid"></div>
+        </div>
 
         <!-- 輸入方式切換 -->
-        <div style="display:flex;gap:6px;margin:10px 0 6px;justify-content:center;">
+        <div style="display:flex;gap:6px;padding:10px 12px 6px;justify-content:center;">
           <button class="diary-input-btn active" data-input="keyboard">⌨️ 鍵盤</button>
           <button class="diary-input-btn" data-input="handwrite">✍️ 手寫</button>
           <button class="diary-input-btn" data-input="voice">🎤 語音</button>
         </div>
 
         <!-- 輸入區：鍵盤 -->
-        <div id="diaryInputKeyboard" class="diary-input-area">
+        <div id="diaryInputKeyboard" class="diary-input-area" style="padding:0 8px;">
           <div class="zhuyin-kb">
             <div class="zhuyin-kb-row">
               <button class="zk zk-i">ㄅ</button><button class="zk zk-i">ㄉ</button><button class="zk zk-t">ˇ</button><button class="zk zk-t">ˋ</button>
@@ -453,14 +567,14 @@
         </div>
 
         <!-- 輸入區：手寫 -->
-        <div id="diaryInputHandwrite" class="diary-input-area" style="display:none;">
+        <div id="diaryInputHandwrite" class="diary-input-area" style="display:none;padding:0 12px;">
           <canvas id="diaryWriteCanvas" width="300" height="120" style="border:2px dashed #ccc;border-radius:12px;background:white;touch-action:none;width:100%;"></canvas>
           <div style="font-size:12px;color:#aaa;margin-top:4px;">在上面寫注音，寫完按「加入」</div>
           <button class="btn-big btn-primary" id="diaryWriteAdd" style="font-size:14px;padding:8px 16px;margin-top:6px;">加入方格</button>
         </div>
 
         <!-- 輸入區：語音 -->
-        <div id="diaryInputVoice" class="diary-input-area" style="display:none;">
+        <div id="diaryInputVoice" class="diary-input-area" style="display:none;padding:0 12px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <button class="btn-big btn-primary" id="diaryMicBtn" style="font-size:28px;width:60px;height:60px;border-radius:50%;padding:0;">🎤</button>
             <div id="diaryMicStatus" style="font-size:14px;color:#888;">點一下開始說話</div>
@@ -469,14 +583,14 @@
         </div>
 
         <!-- 工具列 -->
-        <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;">
+        <div style="display:flex;gap:8px;padding:8px 12px 12px;justify-content:center;">
           <button class="btn-big" id="diaryUndo" style="font-size:16px;padding:8px 14px;background:#eee;">↩️</button>
           <button class="btn-big" id="diaryClear" style="font-size:16px;padding:8px 14px;background:#eee;">🗑️</button>
           <button class="btn-big btn-success" id="diarySave" style="font-size:16px;padding:8px 14px;">💾 存</button>
           <button class="btn-big" id="diaryReadBack" style="font-size:16px;padding:8px 14px;background:var(--accent);">🔊 唸</button>
         </div>
       </div>
-      <div id="diaryStreak" style="margin-top:12px;font-size:14px;"></div>
+      <div id="diaryStreak" style="margin-top:12px;font-size:14px;text-align:center;"></div>
     </div>
 
     <!-- Tab: Parent -->
@@ -1438,6 +1552,7 @@
       });
 
       this.updateStreak();
+      this.renderGrid();
 
       if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1509,13 +1624,63 @@
       // Drawing canvas (for illustrations)
       const canvas = document.getElementById('diaryCanvas');
       this.ctx = canvas.getContext('2d');
-      this.ctx.lineWidth = 4;
+      this.ctx.lineWidth = 3;
       this.ctx.lineCap = 'round';
       this.ctx.strokeStyle = '#2D3436';
+      this.drawColor = '#2D3436';
+      this.drawWidth = 3;
+      this.isErasing = false;
       canvas.addEventListener('pointerdown', (e) => this.startDraw(e));
       canvas.addEventListener('pointermove', (e) => this.draw(e));
       canvas.addEventListener('pointerup', () => this.endDraw());
       canvas.addEventListener('pointerleave', () => this.endDraw());
+
+      // Drawing tools: colors
+      document.querySelectorAll('.draw-color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.drawColor = btn.dataset.color;
+          this.isErasing = false;
+          document.getElementById('drawEraser').classList.remove('active');
+          this.ctx.globalCompositeOperation = 'source-over';
+          this.ctx.strokeStyle = this.drawColor;
+          this.ctx.lineWidth = this.drawWidth;
+        });
+      });
+
+      // Drawing tools: eraser
+      document.getElementById('drawEraser').addEventListener('click', () => {
+        this.isErasing = !this.isErasing;
+        const btn = document.getElementById('drawEraser');
+        if (this.isErasing) {
+          btn.classList.add('active');
+          document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('active'));
+          this.ctx.globalCompositeOperation = 'destination-out';
+          this.ctx.lineWidth = 20;
+        } else {
+          btn.classList.remove('active');
+          const activeColor = document.querySelector('.draw-color-btn[data-color="' + this.drawColor + '"]');
+          if (activeColor) activeColor.classList.add('active');
+          this.ctx.globalCompositeOperation = 'source-over';
+          this.ctx.strokeStyle = this.drawColor;
+          this.ctx.lineWidth = this.drawWidth;
+        }
+      });
+
+      // Drawing tools: brush width
+      document.getElementById('drawThin').addEventListener('click', () => {
+        this.drawWidth = 3;
+        document.getElementById('drawThin').classList.add('active');
+        document.getElementById('drawThick').classList.remove('active');
+        if (!this.isErasing) this.ctx.lineWidth = 3;
+      });
+      document.getElementById('drawThick').addEventListener('click', () => {
+        this.drawWidth = 8;
+        document.getElementById('drawThick').classList.add('active');
+        document.getElementById('drawThin').classList.remove('active');
+        if (!this.isErasing) this.ctx.lineWidth = 8;
+      });
 
       // Handwriting canvas (for writing zhuyin)
       const wCanvas = document.getElementById('diaryWriteCanvas');
@@ -1564,24 +1729,31 @@
     renderGrid() {
       const grid = document.getElementById('diaryGrid');
       grid.innerHTML = '';
-      this.cells.forEach(c => {
+      const cols = window.innerWidth <= 340 ? 6 : 7;
+      const minRows = 5;
+      const minCells = cols * minRows;
+      const totalCells = Math.max(this.cells.length, minCells);
+      for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'diary-cell';
-        if (c.type === 'punct') {
-          cell.classList.add('punct');
-          cell.textContent = c.symbol;
-        } else if (c.type === 'space') {
-          cell.classList.add('space');
-        } else if (c.type === 'tone') {
-          cell.textContent = c.symbol;
-          cell.style.color = '#3498db';
-        } else {
-          cell.textContent = c.symbol;
-          const isWeak = APP.data.weakItems.includes(c.symbol);
-          if (isWeak) cell.classList.add('weak');
+        if (i < this.cells.length) {
+          const c = this.cells[i];
+          if (c.type === 'punct') {
+            cell.classList.add('punct');
+            cell.textContent = c.symbol;
+          } else if (c.type === 'space') {
+            cell.classList.add('space');
+          } else if (c.type === 'tone') {
+            cell.textContent = c.symbol;
+            cell.style.color = '#3498db';
+          } else {
+            cell.textContent = c.symbol;
+            const isWeak = APP.data.weakItems.includes(c.symbol);
+            if (isWeak) cell.classList.add('weak');
+          }
         }
         grid.appendChild(cell);
-      });
+      }
     },
 
     loadDate(dateStr) {
@@ -1610,8 +1782,8 @@
         if (entry.drawing) {
           const img = new Image();
           img.onload = () => {
-            this.ctx.clearRect(0, 0, 350, 140);
-            this.ctx.drawImage(img, 0, 0, 350, 140);
+            this.ctx.clearRect(0, 0, 380, 200);
+            this.ctx.drawImage(img, 0, 0, 380, 200);
           };
           img.src = entry.drawing;
           this.strokes = [];
@@ -1649,7 +1821,12 @@
       const rect = e.target.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      this.currentStroke = [{ x, y }];
+      this.currentStroke = [{
+        x, y,
+        color: this.drawColor,
+        width: this.isErasing ? 20 : this.drawWidth,
+        erasing: this.isErasing
+      }];
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
     },
@@ -1680,20 +1857,27 @@
       this.strokes = [];
       this.cells = [];
       this.originalText = '';
-      this.ctx.clearRect(0, 0, 350, 180);
+      this.ctx.clearRect(0, 0, 380, 200);
       document.getElementById('diaryGrid').innerHTML = '';
       document.getElementById('diaryOriginal').textContent = '';
     },
 
     redraw() {
-      this.ctx.clearRect(0, 0, 350, 180);
+      this.ctx.clearRect(0, 0, 380, 200);
       this.strokes.forEach(stroke => {
         if (stroke.length === 0) return;
+        const meta = stroke[0];
+        this.ctx.globalCompositeOperation = meta.erasing ? 'destination-out' : 'source-over';
+        this.ctx.strokeStyle = meta.color || '#2D3436';
+        this.ctx.lineWidth = meta.width || 3;
         this.ctx.beginPath();
         this.ctx.moveTo(stroke[0].x, stroke[0].y);
         stroke.forEach(p => this.ctx.lineTo(p.x, p.y));
         this.ctx.stroke();
       });
+      this.ctx.globalCompositeOperation = this.isErasing ? 'destination-out' : 'source-over';
+      this.ctx.strokeStyle = this.drawColor;
+      this.ctx.lineWidth = this.isErasing ? 20 : this.drawWidth;
     },
 
     saveDiary() {
