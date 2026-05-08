@@ -343,7 +343,11 @@
         <span id="flashcardSymbol" style="font-size:120px;font-weight:bold;"></span>
         <canvas id="fcStrokeCanvas" width="200" height="200" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;display:none;"></canvas>
       </div>
-      <div style="display:flex;gap:12px;margin-top:8px;justify-content:center;">
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;justify-content:center;">
+        <div style="font-size:13px;color:#888;" id="fcProgress">0 / 0</div>
+        <div style="flex:1;max-width:150px;height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+          <div id="fcProgressBar" style="height:100%;background:var(--secondary);border-radius:3px;transition:width 0.3s;width:0%;"></div>
+        </div>
         <button class="btn-big" id="fcStrokeBtn" style="font-size:14px;padding:8px 16px;background:#f0e8ff;border:2px solid #d0b8ff;">✍️ 看筆順</button>
       </div>
       <div style="display:flex;gap:20px;margin-top:12px;">
@@ -957,9 +961,17 @@
       });
     },
 
+    updateProgress() {
+      const done = this.roundTotal - this.deck.length;
+      document.getElementById('fcProgress').textContent = `${done} / ${this.roundTotal}`;
+      const pct = this.roundTotal > 0 ? Math.round(done / this.roundTotal * 100) : 0;
+      document.getElementById('fcProgressBar').style.width = pct + '%';
+    },
+
     next() {
       if (this.deck.length === 0) { this.showRoundSummary(); return; }
       this.current = this.deck.pop();
+      this.updateProgress();
       const el = document.getElementById('flashcardSymbol');
       el.textContent = this.current;
       el.classList.remove('bounce');
