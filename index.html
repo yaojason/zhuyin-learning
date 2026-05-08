@@ -965,7 +965,8 @@
             setTimeout(() => this.nextWord(), 1200);
           }
           Storage.recordAnswer(APP.data, true);
-          const [,char] = this.currentWord;
+          const [zy,char] = this.currentWord;
+          for (const ch of zy) { if (ALL_ZY_CHARS.includes(ch)) Storage.removeWeakItem(APP.data, ch); }
           TTS.speak(char, APP.data.settings.speechRate);
         } else {
           setTimeout(() => this.render(), 400);
@@ -976,6 +977,8 @@
         btn.style.opacity = '0.3';
         btn.disabled = true;
         Storage.recordAnswer(APP.data, false);
+        const [zy] = this.currentWord;
+        for (const ch of zy) { if (ALL_ZY_CHARS.includes(ch)) Storage.addWeakItem(APP.data, ch); }
         container.querySelectorAll('button').forEach(b => {
           if (b.textContent === correct) b.style.background = 'var(--accent)';
         });
@@ -1047,6 +1050,8 @@
         APP.data.progress.listening.correct += 1;
         APP.data.progress.listening.total += 1;
         Storage.recordAnswer(APP.data, true);
+        const [zy] = this.currentWord;
+        for (const ch of zy) { if (ALL_ZY_CHARS.includes(ch)) Storage.removeWeakItem(APP.data, ch); }
         setTimeout(() => this.nextQuestion(), 1000);
       } else {
         feedback.textContent = randomEncourage();
@@ -1054,6 +1059,8 @@
         btn.disabled = true;
         APP.data.progress.listening.total += 1;
         Storage.recordAnswer(APP.data, false);
+        const [zy] = this.currentWord;
+        for (const ch of zy) { if (ALL_ZY_CHARS.includes(ch)) Storage.addWeakItem(APP.data, ch); }
         container.querySelectorAll('button').forEach(b => {
           if (b.textContent === this.correct) b.style.boxShadow = '0 0 0 3px var(--accent)';
         });
