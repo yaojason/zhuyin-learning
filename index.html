@@ -518,6 +518,7 @@
       <div id="listenFeedback" style="font-size:24px;min-height:40px;margin-top:16px;"></div>
       <div style="margin-top:12px;font-size:14px;color:#888;">
         <span id="listenScore">0</span> / <span id="listenTotal">0</span> 答對
+        · 難度 <span id="listenDifficulty">⭐⭐</span>
       </div>
     </div>
 
@@ -1470,6 +1471,8 @@
     timerMode: false,
     timerInterval: null,
     timerSeconds: 10,
+    streak: 0,
+    numOptions: 4,
 
     init() {
       document.getElementById('listenPlayBtn').addEventListener('click', () => this.playSound());
@@ -1500,6 +1503,7 @@
           this.stopTimer();
           document.getElementById('listenFeedback').textContent = '⏰ 時間到！';
           SFX.wrong();
+          this.adjustDifficulty(false);
           APP.data.progress.listening.total += 1;
           Storage.recordAnswer(APP.data, false);
           const [zy] = this.currentWord;
@@ -1518,8 +1522,9 @@
       const [zhuyin, , tone] = this.currentWord;
       this.correct = zhuyin + TONES[tone];
 
+      const wrongCount = this.numOptions - 1;
       const wrongs = [];
-      while (wrongs.length < 3) {
+      while (wrongs.length < wrongCount) {
         const w = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
         const label = w[0] + TONES[w[2]];
         if (label !== this.correct && !wrongs.includes(label)) wrongs.push(label);
@@ -1560,10 +1565,28 @@
       });
     },
 
+    adjustDifficulty(correct) {
+      if (correct) {
+        this.streak = Math.max(1, this.streak + 1);
+        if (this.streak >= 3 && this.numOptions < 6) {
+          this.numOptions++;
+          this.streak = 0;
+        }
+      } else {
+        this.streak = Math.min(-1, this.streak - 1);
+        if (this.streak <= -2 && this.numOptions > 2) {
+          this.numOptions--;
+          this.streak = 0;
+        }
+      }
+      this.updateScore();
+    },
+
     checkAnswer(selected, btn, container) {
       this.stopTimer();
       const feedback = document.getElementById('listenFeedback');
       if (selected === this.correct) {
+        this.adjustDifficulty(true);
         feedback.textContent = '⭐ ' + randomPraise();
         btn.style.background = 'var(--success)';
         btn.style.transform = 'scale(1.15)';
@@ -1581,6 +1604,7 @@
         for (const ch of zy) { if (ALL_ZY_CHARS.includes(ch)) Storage.removeWeakItem(APP.data, ch); }
         setTimeout(() => this.nextQuestion(), 1500);
       } else {
+        this.adjustDifficulty(false);
         feedback.textContent = randomEncourage();
         btn.style.opacity = '0.3';
         btn.disabled = true;
@@ -1599,6 +1623,8 @@
     updateScore() {
       document.getElementById('listenScore').textContent = APP.data.progress.listening.correct;
       document.getElementById('listenTotal').textContent = APP.data.progress.listening.total;
+      const stars = '⭐'.repeat(Math.max(1, this.numOptions - 2));
+      document.getElementById('listenDifficulty').textContent = stars;
     },
   };
 
