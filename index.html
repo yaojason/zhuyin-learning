@@ -282,6 +282,30 @@
     @media (min-width: 768px) {
       .app-container { max-width: 600px; }
     }
+    /* Dark mode */
+    .dark {
+      --bg: #1a1a2e;
+      --text: #e8e8e8;
+      --card: #16213e;
+      --shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .dark .tab-bar { background: #0f3460; }
+    .dark .btn-primary { background: #0f3460; }
+    .dark .mode-btn { background: #16213e; color: #e8e8e8; border-color: #0f3460; }
+    .dark .mode-btn.active { background: #0f3460; }
+    .dark .settings-btn { background: rgba(255,255,255,0.1); }
+    .dark .diary-notebook { background: #16213e; border-color: #0f3460; }
+    .dark .diary-cell { background: #1a1a2e; border-color: #333; }
+    .dark .diary-cell.space { background: #222; }
+    .dark .zk { background: #1a1a2e; border-color: #444; color: #e8e8e8; }
+    .dark .zk-i { background: #1b3a1b; border-color: #2d5a2d; }
+    .dark .zk-f { background: #1a2a3e; border-color: #2a4a6e; }
+    .dark .zk-t { background: #3a2a1a; border-color: #5a4a2a; }
+    .dark .zk:active { background: #333; }
+    .dark .diary-input-btn { background: #1a1a2e; color: #e8e8e8; border-color: #444; }
+    .dark .diary-input-btn.active { background: #0f3460; border-color: #0f3460; }
+    .dark #welcomeBanner { background: linear-gradient(135deg,#1a2a3e,#16213e); border-color: #0f3460; }
+    .dark #welcomeBanner div { color: #ccc; }
   </style>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -469,6 +493,7 @@
           <label>小孩名字：<input type="text" id="settingName" maxlength="10" placeholder="輸入名字" style="width:100px;font-size:16px;padding:4px;"></label>
           <label>每日目標：<input type="number" id="settingGoal" min="5" max="100" style="width:60px;font-size:16px;padding:4px;"> 題</label>
           <label>發音速度：<select id="settingRate" style="font-size:16px;padding:4px;"><option value="0.7">慢</option><option value="1" selected>正常</option><option value="1.2">快</option></select></label>
+          <label>深色模式：<select id="settingDark" style="font-size:16px;padding:4px;"><option value="auto">自動</option><option value="light">淺色</option><option value="dark">深色</option></select></label>
           <button class="btn-big btn-danger" id="settingReset" style="font-size:16px;padding:10px;">重置所有進度</button>
         </div>
       </div>
@@ -679,6 +704,7 @@
           speechRate: 1,
           voice: 'zh-TW-YunJheNeural',
           childName: '',
+          darkMode: 'auto',
         },
         todayStats: { date: null, questions: 0, correct: 0, minutes: 0 },
         dailyHistory: {},
@@ -1557,6 +1583,12 @@
         APP.data.settings.speechRate = parseFloat(e.target.value);
         Storage.save(APP.data);
       });
+
+      document.getElementById('settingDark').addEventListener('change', (e) => {
+        APP.data.settings.darkMode = e.target.value;
+        Storage.save(APP.data);
+        applyDarkMode();
+      });
     },
 
     refresh() {
@@ -1640,9 +1672,20 @@
 
       document.getElementById('settingName').value = APP.data.settings.childName || '';
       document.getElementById('settingGoal').value = APP.data.settings.dailyGoal;
+      document.getElementById('settingDark').value = APP.data.settings.darkMode || 'auto';
       document.getElementById('settingRate').value = APP.data.settings.speechRate >= 1.1 ? '1.2' : APP.data.settings.speechRate >= 0.9 ? '1' : '0.7';
     },
   };
+
+  // === DARK MODE ===
+  function applyDarkMode() {
+    const mode = APP.data.settings.darkMode || 'auto';
+    if (mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }
 
   // === WELCOME BANNER ===
   function refreshWelcome() {
@@ -1674,6 +1717,7 @@
   APP.data = Storage.load();
   Storage.updateStreak(APP.data);
   document.getElementById('starCounter').textContent = `⭐ ${APP.data.stars}`;
+  applyDarkMode();
   refreshWelcome();
   Flashcard.init();
   Pinyin.init();
