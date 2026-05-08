@@ -253,10 +253,24 @@
     .tab-content::-webkit-scrollbar { display: none; }
     .tab-content { -ms-overflow-style: none; scrollbar-width: none; }
     /* Responsive */
-    @media (max-width: 380px) {
-      .tab-btn { font-size: 22px; }
-      .btn-big { min-height: 50px; font-size: 20px; padding: 12px 24px; }
+    @media (max-width: 420px) {
+      .tab-btn { font-size: 22px; padding: 6px 8px; }
+      .btn-big { min-height: 48px; font-size: 18px; padding: 10px 20px; }
       #flashcardSymbol { font-size: 90px; }
+      .diary-notebook { padding: 10px; }
+      .zk { width: 28px; height: 32px; font-size: 16px; }
+      .zk-wide { width: 56px; font-size: 12px; }
+      .zk-del { width: 40px; }
+      .diary-grid { grid-template-columns: repeat(8, 38px); }
+      .diary-cell { width: 38px; height: 38px; font-size: 22px; }
+      .card { padding: 16px; max-width: 100%; }
+      .diary-input-btn { padding: 5px 10px; font-size: 12px; }
+    }
+    @media (max-width: 340px) {
+      .zk { width: 24px; height: 28px; font-size: 14px; }
+      .zk-wide { width: 48px; }
+      .diary-grid { grid-template-columns: repeat(7, 34px); }
+      .diary-cell { width: 34px; height: 34px; font-size: 20px; }
     }
     @media (min-width: 768px) {
       .app-container { max-width: 600px; }
