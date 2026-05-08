@@ -373,6 +373,13 @@
 
     <!-- Tab: Listening -->
     <div class="tab-content" id="tab-listening">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <button class="mode-btn" id="listenTimerToggle">⏱ 計時模式</button>
+        <div id="listenTimerBar" style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;display:none;">
+          <div id="listenTimerFill" style="height:100%;background:var(--primary);border-radius:4px;width:100%;transition:width 0.1s linear;"></div>
+        </div>
+        <span id="listenTimerText" style="font-size:14px;font-weight:bold;color:var(--primary);display:none;">10</span>
+      </div>
       <button class="btn-big" id="listenPlayBtn" style="font-size:60px;width:120px;height:120px;border-radius:50%;background:var(--accent);margin:20px 0;">
         🔊
       </button>
@@ -1264,10 +1271,50 @@
     currentWord: null,
     options: [],
     correct: '',
+    timerMode: false,
+    timerInterval: null,
+    timerSeconds: 10,
 
     init() {
       document.getElementById('listenPlayBtn').addEventListener('click', () => this.playSound());
+      document.getElementById('listenTimerToggle').addEventListener('click', () => {
+        this.timerMode = !this.timerMode;
+        const btn = document.getElementById('listenTimerToggle');
+        btn.classList.toggle('active', this.timerMode);
+        document.getElementById('listenTimerBar').style.display = this.timerMode ? '' : 'none';
+        document.getElementById('listenTimerText').style.display = this.timerMode ? '' : 'none';
+        if (!this.timerMode) this.stopTimer();
+      });
       this.nextQuestion();
+    },
+
+    startTimer() {
+      if (!this.timerMode) return;
+      this.stopTimer();
+      let remaining = this.timerSeconds * 10;
+      const total = remaining;
+      document.getElementById('listenTimerFill').style.width = '100%';
+      document.getElementById('listenTimerText').textContent = this.timerSeconds;
+      this.timerInterval = setInterval(() => {
+        remaining--;
+        const pct = (remaining / total) * 100;
+        document.getElementById('listenTimerFill').style.width = pct + '%';
+        if (remaining % 10 === 0) document.getElementById('listenTimerText').textContent = Math.ceil(remaining / 10);
+        if (remaining <= 0) {
+          this.stopTimer();
+          document.getElementById('listenFeedback').textContent = '⏰ 時間到！';
+          SFX.wrong();
+          APP.data.progress.listening.total += 1;
+          Storage.recordAnswer(APP.data, false);
+          const [zy] = this.currentWord;
+          for (const ch of zy) { if (ALL_ZY_CHARS.includes(ch)) Storage.addWeakItem(APP.data, ch); }
+          setTimeout(() => this.nextQuestion(), 1500);
+        }
+      }, 100);
+    },
+
+    stopTimer() {
+      if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
     },
 
     nextQuestion() {
@@ -1292,6 +1339,7 @@
       document.getElementById('listenFeedback').textContent = '';
       document.getElementById('listenPrompt').textContent = '點喇叭聽發音';
       this.updateScore();
+      this.startTimer();
     },
 
     async playSound() {
@@ -1317,6 +1365,7 @@
     },
 
     checkAnswer(selected, btn, container) {
+      this.stopTimer();
       const feedback = document.getElementById('listenFeedback');
       if (selected === this.correct) {
         feedback.textContent = '⭐ ' + randomPraise();
