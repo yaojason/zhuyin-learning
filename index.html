@@ -404,6 +404,10 @@
         </div>
       </div>
       <div class="card" style="margin-bottom:16px;padding:20px;">
+        <h3 style="margin-bottom:12px;">7 日趨勢</h3>
+        <div id="parentChart" style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:120px;padding-top:10px;"></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;padding:20px;">
         <h3 style="margin-bottom:12px;">弱項 Top 5</h3>
         <div id="parentWeak" style="font-size:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;"></div>
       </div>
@@ -605,6 +609,7 @@
           voice: 'zh-TW-YunJheNeural',
         },
         todayStats: { date: null, questions: 0, correct: 0, minutes: 0 },
+        dailyHistory: {},
       };
     },
 
@@ -630,11 +635,15 @@
     recordAnswer(data, correct) {
       const today = new Date().toISOString().slice(0, 10);
       if (data.todayStats.date !== today) {
+        if (data.todayStats.date) {
+          data.dailyHistory[data.todayStats.date] = { q: data.todayStats.questions, c: data.todayStats.correct };
+        }
         data.todayStats = { date: today, questions: 0, correct: 0, minutes: 0 };
       }
       data.todayStats.questions += 1;
       if (correct) data.todayStats.correct += 1;
       if (correct && data.todayStats.correct % 5 === 0) this.addStar(data);
+      data.dailyHistory[today] = { q: data.todayStats.questions, c: data.todayStats.correct };
       this.save(data);
     },
 
@@ -1300,6 +1309,37 @@
       const accuracy = stats.questions > 0 ? Math.round(stats.correct / stats.questions * 100) : 0;
       document.getElementById('parentAccuracy').textContent = `${accuracy}%`;
       document.getElementById('parentStreak').textContent = APP.data.streak;
+
+      // 7-day chart
+      const chartEl = document.getElementById('parentChart');
+      chartEl.innerHTML = '';
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+        const h = APP.data.dailyHistory[d] || { q: 0, c: 0 };
+        if (d === today && stats.date === today) { h.q = stats.questions; h.c = stats.correct; }
+        days.push({ date: d, ...h });
+      }
+      const maxQ = Math.max(...days.map(d => d.q), 1);
+      const goal = APP.data.settings.dailyGoal;
+      days.forEach(d => {
+        const col = document.createElement('div');
+        col.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;';
+        const bar = document.createElement('div');
+        const h = Math.max(Math.round((d.q / Math.max(maxQ, goal)) * 80), 4);
+        const color = d.q >= goal ? 'var(--success)' : (d.q > 0 ? 'var(--secondary)' : '#eee');
+        bar.style.cssText = `width:28px;height:${h}px;background:${color};border-radius:6px 6px 0 0;transition:height 0.3s;`;
+        const num = document.createElement('div');
+        num.style.cssText = 'font-size:11px;font-weight:bold;';
+        num.textContent = d.q || '';
+        const label = document.createElement('div');
+        label.style.cssText = 'font-size:10px;color:#aaa;';
+        label.textContent = d.date.slice(5);
+        col.appendChild(num);
+        col.appendChild(bar);
+        col.appendChild(label);
+        chartEl.appendChild(col);
+      });
 
       const weakEl = document.getElementById('parentWeak');
       const weaks = APP.data.weakItems.slice(0, 5);
