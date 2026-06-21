@@ -846,7 +846,7 @@
   const P2Z_FINALS = {
     a:'ㄚ',o:'ㄛ',e:'ㄜ',ai:'ㄞ',ei:'ㄟ',ao:'ㄠ',ou:'ㄡ',an:'ㄢ',en:'ㄣ',ang:'ㄤ',eng:'ㄥ',er:'ㄦ',
     i:'ㄧ',u:'ㄨ',v:'ㄩ',
-    ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',
+    ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',io:'ㄧㄛ',
     ua:'ㄨㄚ',uo:'ㄨㄛ',uai:'ㄨㄞ',ui:'ㄨㄟ',uan:'ㄨㄢ',un:'ㄨㄣ',uang:'ㄨㄤ',ong:'ㄨㄥ',
     ve:'ㄩㄝ',van:'ㄩㄢ',vn:'ㄩㄣ',vang:'ㄩㄤ',
     ue:'ㄩㄝ',
@@ -877,7 +877,16 @@
       if (plain.startsWith(k)) { initial = k; plain = plain.slice(k.length); break; }
     }
     if (initial === '' && (plain.startsWith('y') || plain.startsWith('w'))) {
-      if (plain.startsWith('yu')) { plain = 'v' + plain.slice(2); }
+      // 整音節 y/w 拼寫還原（yi→i, you→iu, ying→ing, wei→ui, wen→un, weng→ㄨㄥ…）
+      const YW_FINALS = {
+        yi:'i', ya:'ia', yo:'io', ye:'ie', yao:'iao', you:'iu', yan:'ian',
+        yin:'in', yang:'iang', ying:'ing', yong:'iong',
+        yu:'v', yue:'ve', yuan:'van', yun:'vn',
+        wu:'u', wa:'ua', wo:'uo', wai:'uai', wei:'ui', wan:'uan',
+        wen:'un', wang:'uang', weng:'ong',
+      };
+      if (YW_FINALS[plain] !== undefined) { plain = YW_FINALS[plain]; }
+      else if (plain.startsWith('yu')) { plain = 'v' + plain.slice(2); }
       else if (plain.startsWith('y')) { plain = 'i' + plain.slice(1); }
       else if (plain.startsWith('wu')) { plain = 'u' + plain.slice(2); }
       else if (plain.startsWith('w')) { plain = 'u' + plain.slice(1); }

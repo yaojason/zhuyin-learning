@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zhuyin-v4';
+const CACHE_NAME = 'zhuyin-v5';
 const ASSETS = [
   '/',
   '/index.html',
