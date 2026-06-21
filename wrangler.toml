@@ -1,0 +1,8 @@
+name = "zhuyin-learning"
+compatibility_date = "2025-09-01"
+
+# 純靜態網站：直接把整個專案目錄當作靜態資源提供
+# （index.html / sw.js / audio/*.mp3）
+[assets]
+directory = "."
+not_found_handling = "single-page-application"
