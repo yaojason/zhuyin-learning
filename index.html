@@ -1594,8 +1594,11 @@
       feedback.textContent = '';
 
       if (this.toneMode) {
-        this.currentWord = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
-        this.correct = String(this.currentWord[2]); // tone index 0-4
+        // 只考一~四聲：詞庫沒有輕聲詞，避免「輕聲永遠不是答案」的誤導
+        do {
+          this.currentWord = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
+        } while (this.currentWord[2] > 3);
+        this.correct = String(this.currentWord[2]); // tone index 0-3
         this.renderToneOptions();
         prompt.textContent = '聽一聽，這是第幾聲？';
       } else {
@@ -1629,14 +1632,15 @@
     renderToneOptions() {
       const container = document.getElementById('listenOptions');
       container.innerHTML = '';
-      for (let i = 0; i < TONE_NAMES.length; i++) {
+      // 一~四聲（輕聲不在詞庫中，故不列為選項，以免誤導）
+      for (let i = 0; i < 4; i++) {
         const btn = document.createElement('button');
         btn.className = 'tone-btn';
         btn.dataset.tone = String(i);
         btn.innerHTML =
           `<span class="tone-name">${TONE_NAMES[i]}</span>` +
           toneContourSVG(i) +
-          `<span class="tone-mark">${i === 4 ? '˙' : TONES[i]}</span>`;
+          `<span class="tone-mark">${TONES[i]}</span>`;
         btn.addEventListener('click', () => this.checkTone(i, btn, container));
         container.appendChild(btn);
       }
