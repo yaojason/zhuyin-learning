@@ -183,6 +183,27 @@
       background: var(--secondary);
       color: white;
     }
+    /* 聲調練習按鈕 */
+    .tone-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      width: 96px;
+      padding: 10px 6px;
+      border-radius: 16px;
+      border: 2px solid var(--secondary);
+      background: white;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .tone-btn:active { transform: scale(0.94); }
+    .tone-btn .tone-name { font-size: 16px; font-weight: bold; color: var(--text); }
+    .tone-btn .tone-mark { font-size: 20px; font-weight: bold; color: var(--secondary); line-height: 1; }
+    .tone-btn svg { display: block; }
+    .tone-btn svg path, .tone-btn svg circle { stroke: var(--secondary); }
+    .dark .tone-btn { background: #16213e; border-color: #0f3460; }
+    .dark .tone-btn .tone-name { color: #e8e8e8; }
     /* Diary notebook - 學習單風格 */
     .diary-notebook {
       background: #fffef8;
@@ -529,9 +550,10 @@
 
     <!-- Tab: Listening -->
     <div class="tab-content" id="tab-listening">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;">
+        <button class="mode-btn" id="listenToneToggle">🎵 聲調模式</button>
         <button class="mode-btn" id="listenTimerToggle">⏱ 計時模式</button>
-        <div id="listenTimerBar" style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;display:none;">
+        <div id="listenTimerBar" style="flex:1;min-width:60px;height:8px;background:#eee;border-radius:4px;overflow:hidden;display:none;">
           <div id="listenTimerFill" style="height:100%;background:var(--primary);border-radius:4px;width:100%;transition:width 0.1s linear;"></div>
         </div>
         <span id="listenTimerText" style="font-size:14px;font-weight:bold;color:var(--primary);display:none;">10</span>
@@ -824,7 +846,7 @@
   const P2Z_FINALS = {
     a:'ㄚ',o:'ㄛ',e:'ㄜ',ai:'ㄞ',ei:'ㄟ',ao:'ㄠ',ou:'ㄡ',an:'ㄢ',en:'ㄣ',ang:'ㄤ',eng:'ㄥ',er:'ㄦ',
     i:'ㄧ',u:'ㄨ',v:'ㄩ',
-    ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',
+    ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',io:'ㄧㄛ',
     ua:'ㄨㄚ',uo:'ㄨㄛ',uai:'ㄨㄞ',ui:'ㄨㄟ',uan:'ㄨㄢ',un:'ㄨㄣ',uang:'ㄨㄤ',ong:'ㄨㄥ',
     ve:'ㄩㄝ',van:'ㄩㄢ',vn:'ㄩㄣ',vang:'ㄩㄤ',
     ue:'ㄩㄝ',
@@ -855,7 +877,16 @@
       if (plain.startsWith(k)) { initial = k; plain = plain.slice(k.length); break; }
     }
     if (initial === '' && (plain.startsWith('y') || plain.startsWith('w'))) {
-      if (plain.startsWith('yu')) { plain = 'v' + plain.slice(2); }
+      // 整音節 y/w 拼寫還原（yi→i, you→iu, ying→ing, wei→ui, wen→un, weng→ㄨㄥ…）
+      const YW_FINALS = {
+        yi:'i', ya:'ia', yo:'io', ye:'ie', yao:'iao', you:'iu', yan:'ian',
+        yin:'in', yang:'iang', ying:'ing', yong:'iong',
+        yu:'v', yue:'ve', yuan:'van', yun:'vn',
+        wu:'u', wa:'ua', wo:'uo', wai:'uai', wei:'ui', wan:'uan',
+        wen:'un', wang:'uang', weng:'ong',
+      };
+      if (YW_FINALS[plain] !== undefined) { plain = YW_FINALS[plain]; }
+      else if (plain.startsWith('yu')) { plain = 'v' + plain.slice(2); }
       else if (plain.startsWith('y')) { plain = 'i' + plain.slice(1); }
       else if (plain.startsWith('wu')) { plain = 'u' + plain.slice(2); }
       else if (plain.startsWith('w')) { plain = 'u' + plain.slice(1); }
@@ -1110,7 +1141,7 @@
     'ㄉ':'弟弟 👦','ㄊ':'兔子 🐰','ㄋ':'牛奶 🥛','ㄌ':'老師 👩‍🏫',
     'ㄍ':'狗狗 🐕','ㄎ':'哭哭 😢','ㄏ':'花朵 🌸','ㄐ':'雞蛋 🥚',
     'ㄑ':'汽車 🚗','ㄒ':'西瓜 🍉','ㄓ':'蜘蛛 🕷️','ㄔ':'吃飯 🍚',
-    'ㄕ':'獅子 🦁','ㄖ':'太陽 ☀️','ㄗ':'做操 🤸','ㄘ':'草地 🌿',
+    'ㄕ':'獅子 🦁','ㄖ':'日 ☀️','ㄗ':'做操 🤸','ㄘ':'草地 🌿',
     'ㄙ':'三個 3️⃣','ㄚ':'阿姨 👧','ㄛ':'喔喔 🐓','ㄜ':'鵝鵝 🦢',
     'ㄝ':'爺爺 👴','ㄞ':'愛心 ❤️','ㄟ':'飛飛 🦅','ㄠ':'小貓 🐱',
     'ㄡ':'小狗 🐶','ㄢ':'安全 🛡️','ㄣ':'恩恩 😊','ㄤ':'糖果 🍬',
@@ -1489,12 +1520,30 @@
     },
   };
 
+  // === TONE PITCH-CONTOUR GRAPHICS (聲調曲線) ===
+  // 用音高曲線教聲調：一聲平、二聲升、三聲降升、四聲降、輕聲點
+  const TONE_CONTOURS = [
+    'M5 6 L43 6',                    // 一聲 ˉ 高平
+    'M6 22 L42 6',                   // 二聲 ˊ 上升
+    'M6 9 Q24 30 42 9',              // 三聲 ˇ 降升（凹）
+    'M6 6 L42 22',                   // 四聲 ˋ 下降
+    null,                            // 輕聲 ˙ 用點表示
+  ];
+  function toneContourSVG(idx) {
+    const path = TONE_CONTOURS[idx];
+    const inner = path
+      ? `<path d="${path}" fill="none" stroke-width="3.5" stroke-linecap="round"/>`
+      : `<circle cx="24" cy="14" r="4.5" fill="currentColor" stroke="none"/>`;
+    return `<svg width="48" height="28" viewBox="0 0 48 28" aria-hidden="true">${inner}</svg>`;
+  }
+
   // === LISTENING QUIZ ===
   const Listening = {
     currentWord: null,
     options: [],
     correct: '',
     timerMode: false,
+    toneMode: false,
     timerInterval: null,
     timerSeconds: 10,
     streak: 0,
@@ -1502,6 +1551,11 @@
 
     init() {
       document.getElementById('listenPlayBtn').addEventListener('click', () => this.playSound());
+      document.getElementById('listenToneToggle').addEventListener('click', () => {
+        this.toneMode = !this.toneMode;
+        document.getElementById('listenToneToggle').classList.toggle('active', this.toneMode);
+        this.nextQuestion();
+      });
       document.getElementById('listenTimerToggle').addEventListener('click', () => {
         this.timerMode = !this.timerMode;
         const btn = document.getElementById('listenTimerToggle');
@@ -1544,29 +1598,93 @@
     },
 
     nextQuestion() {
-      this.currentWord = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
-      const [zhuyin, , tone] = this.currentWord;
-      this.correct = zhuyin + TONES[tone];
+      const feedback = document.getElementById('listenFeedback');
+      const prompt = document.getElementById('listenPrompt');
+      feedback.textContent = '';
 
-      const wrongCount = this.numOptions - 1;
-      const wrongs = [];
-      while (wrongs.length < wrongCount) {
-        const w = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
-        const label = w[0] + TONES[w[2]];
-        if (label !== this.correct && !wrongs.includes(label)) wrongs.push(label);
+      if (this.toneMode) {
+        // 只考一~四聲：詞庫沒有輕聲詞，避免「輕聲永遠不是答案」的誤導
+        do {
+          this.currentWord = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
+        } while (this.currentWord[2] > 3);
+        this.correct = String(this.currentWord[2]); // tone index 0-3
+        this.renderToneOptions();
+        prompt.textContent = '聽一聽，這是第幾聲？';
+      } else {
+        this.currentWord = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
+        const [zhuyin, , tone] = this.currentWord;
+        this.correct = zhuyin + TONES[tone];
+
+        const wrongCount = this.numOptions - 1;
+        const wrongs = [];
+        while (wrongs.length < wrongCount) {
+          const w = PINYIN_WORDS[Math.floor(Math.random() * PINYIN_WORDS.length)];
+          const label = w[0] + TONES[w[2]];
+          if (label !== this.correct && !wrongs.includes(label)) wrongs.push(label);
+        }
+
+        this.options = [this.correct, ...wrongs];
+        for (let i = this.options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [this.options[i], this.options[j]] = [this.options[j], this.options[i]];
+        }
+
+        this.renderOptions();
+        prompt.textContent = '點喇叭聽發音';
       }
-
-      this.options = [this.correct, ...wrongs];
-      for (let i = this.options.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [this.options[i], this.options[j]] = [this.options[j], this.options[i]];
-      }
-
-      this.renderOptions();
-      document.getElementById('listenFeedback').textContent = '';
-      document.getElementById('listenPrompt').textContent = '點喇叭聽發音';
       this.updateScore();
       this.startTimer();
+      // 聲調模式自動播一次，幫助孩子聽辨
+      if (this.toneMode) setTimeout(() => this.playSound(), 400);
+    },
+
+    renderToneOptions() {
+      const container = document.getElementById('listenOptions');
+      container.innerHTML = '';
+      // 一~四聲（輕聲不在詞庫中，故不列為選項，以免誤導）
+      for (let i = 0; i < 4; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'tone-btn';
+        btn.dataset.tone = String(i);
+        btn.innerHTML =
+          `<span class="tone-name">${TONE_NAMES[i]}</span>` +
+          toneContourSVG(i) +
+          `<span class="tone-mark">${TONES[i]}</span>`;
+        btn.addEventListener('click', () => this.checkTone(i, btn, container));
+        container.appendChild(btn);
+      }
+    },
+
+    checkTone(selected, btn, container) {
+      this.stopTimer();
+      const feedback = document.getElementById('listenFeedback');
+      const correctIdx = this.currentWord[2];
+      if (selected === correctIdx) {
+        feedback.textContent = '⭐ ' + randomPraise();
+        btn.style.background = 'var(--success)';
+        btn.style.transform = 'scale(1.1)';
+        container.querySelectorAll('button').forEach(b => {
+          if (b !== btn) { b.style.opacity = '0.3'; b.disabled = true; }
+        });
+        const playBtn = document.getElementById('listenPlayBtn');
+        playBtn.textContent = '🎉';
+        setTimeout(() => { playBtn.textContent = '🔊'; }, 1200);
+        APP.data.progress.listening.correct += 1;
+        APP.data.progress.listening.total += 1;
+        Storage.recordAnswer(APP.data, true);
+        setTimeout(() => this.nextQuestion(), 1500);
+      } else {
+        feedback.textContent = randomEncourage();
+        btn.style.opacity = '0.3';
+        btn.disabled = true;
+        APP.data.progress.listening.total += 1;
+        Storage.recordAnswer(APP.data, false);
+        container.querySelectorAll('button').forEach(b => {
+          if (b.dataset.tone === String(correctIdx)) b.style.boxShadow = '0 0 0 3px var(--accent)';
+        });
+        this.playSound();
+      }
+      this.updateScore();
     },
 
     async playSound() {
@@ -1649,7 +1767,7 @@
     updateScore() {
       document.getElementById('listenScore').textContent = APP.data.progress.listening.correct;
       document.getElementById('listenTotal').textContent = APP.data.progress.listening.total;
-      const stars = '⭐'.repeat(Math.max(1, this.numOptions - 2));
+      const stars = this.toneMode ? '🎵 聲調' : '⭐'.repeat(Math.max(1, this.numOptions - 2));
       document.getElementById('listenDifficulty').textContent = stars;
     },
   };
